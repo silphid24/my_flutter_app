@@ -1,0 +1,77 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '14.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+# Set the macOS deployment target
+ENV['MACOSX_DEPLOYMENT_TARGET'] = '10.15'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  # 비모듈식 헤더 허용
+  use_modular_headers!
+  
+  # Force GoogleUtilities version compatibility if needed
+  pod 'GoogleUtilities', '~> 7.13.3'
+  
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    
+    # Set deployment targets for all pods
+    target.build_configurations.each do |config|
+      # Set macOS deployment target for all pods
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.15'
+      
+      # Set iOS deployment target to match our app's minimum
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      
+      # For compatibility with GoogleMaps
+      if target.name.include?('google_maps_flutter') || target.name.include?('GoogleMaps')
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      end
+      
+      # 모듈화 문제 해결
+      config.build_settings['DEFINES_MODULE'] = 'YES'
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      
+      # 비모듈식 헤더 경고 비활성화
+      config.build_settings['CLANG_WARN_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'NO'
+      
+      # 헤더 검색 경로 조정
+      if target.name.include?('firebase_auth')
+        config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+        config.build_settings['HEADER_SEARCH_PATHS'] << '${PODS_ROOT}/Firebase/CoreOnly/Sources'
+      end
+    end
+  end
+end

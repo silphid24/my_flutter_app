@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "523487864273",
+    "project_id": "caminandes-96a08",
+    "storage_bucket": "caminandes-96a08.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:523487864273:android:da33492b400d6b13fcecf0",
+        "android_client_info": {
+          "package_name": "com.nextwe.caminandes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "523487864273-ml4fucgq0o99g7vglg96bi8ovu68rp3p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjRZw3KdzrGYqxw7lKuyuoKzImB8Y_VEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "523487864273-ml4fucgq0o99g7vglg96bi8ovu68rp3p.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "523487864273-esimmn93i3t6000i2tgk0bd0lqr17orb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nextwe.caminandes"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
