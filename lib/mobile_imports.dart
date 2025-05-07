@@ -1,5 +1,5 @@
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 // Google Maps 웹 초기화 - 모바일에서는 사용하지 않는 더미 함수
 void initializeGoogleMapsForWeb() {
@@ -14,10 +14,7 @@ void initializeDatabaseForWeb() {
 // SQLite 모바일 초기화
 void initializeDatabaseForMobile() {
   try {
-    // FFI 초기화
-    sqfliteFfiInit();
-    // 모바일용 FFI 데이터베이스 팩토리 설정
-    databaseFactory = databaseFactoryFfi;
+    // 기본 sqflite는 자동으로 초기화됨
     print('모바일 SQLite 초기화 완료');
   } catch (e) {
     print('모바일 SQLite 초기화 오류: $e');

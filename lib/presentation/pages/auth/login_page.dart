@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_flutter_app/config/routes.dart';
+import 'package:my_flutter_app/presentation/router/app_router.dart';
 import 'package:my_flutter_app/domain/repositories/auth_repository.dart';
 import 'package:my_flutter_app/presentation/bloc/auth_bloc.dart';
 
@@ -18,6 +18,25 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _autoLogin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoLoginSettings();
+  }
+
+  Future<void> _loadAutoLoginSettings() async {
+    try {
+      final authRepository = context.read<AuthRepository>();
+      final isAutoLoginEnabled = await authRepository.isAutoLoginEnabled();
+      setState(() {
+        _autoLogin = isAutoLoginEnabled;
+      });
+    } catch (e) {
+      debugPrint('자동 로그인 설정 로드 오류: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -32,13 +51,22 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
+      // 자동 로그인 설정 저장
+      if (_autoLogin) {
+        context.read<AuthRepository>().setAutoLogin(
+              true,
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            );
+      }
+
       // Firebase 로그인 실행
       context.read<AuthBloc>().add(
-        EmailLoginRequested(
-          _emailController.text.trim(),
-          _passwordController.text,
-        ),
-      );
+            EmailLoginRequested(
+              _emailController.text.trim(),
+              _passwordController.text,
+            ),
+          );
     }
   }
 
@@ -181,15 +209,39 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 8),
 
-                      // 비밀번호 찾기 링크
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            // 비밀번호 찾기 화면으로 이동
-                          },
-                          child: const Text('Forgot Password?'),
-                        ),
+                      // 비밀번호 찾기 링크와 자동 로그인 체크박스 행
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // 자동 로그인 체크박스
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _autoLogin,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _autoLogin = value ?? false;
+                                  });
+                                  // 자동 로그인 해제 시 저장된 정보 삭제
+                                  if (!(value ?? true)) {
+                                    context.read<AuthRepository>().setAutoLogin(
+                                          false,
+                                        );
+                                  }
+                                },
+                              ),
+                              const Text('자동 로그인'),
+                            ],
+                          ),
+
+                          // 비밀번호 찾기 링크
+                          TextButton(
+                            onPressed: () {
+                              // 비밀번호 찾기 화면으로 이동
+                            },
+                            child: const Text('Forgot Password?'),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 24),
@@ -199,16 +251,15 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _login,
-                          child:
-                              _isLoading
-                                  ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : const Text('Login'),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Login'),
                         ),
                       ),
 
@@ -303,14 +354,13 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon:
-          isLoading
-              ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-              : Icon(icon),
+      icon: isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(icon),
       label: Text(label),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

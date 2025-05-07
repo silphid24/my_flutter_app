@@ -4,9 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:my_flutter_app/domain/repositories/auth_repository.dart';
 import 'package:my_flutter_app/data/repositories/auth_repository_impl.dart';
+import 'dart:developer';
 
 // Events
 abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+
   @override
   List<Object?> get props => [];
 }
@@ -16,7 +19,7 @@ class AppStarted extends AuthEvent {}
 class LoggedIn extends AuthEvent {
   final DummyUser user;
 
-  LoggedIn(this.user);
+  const LoggedIn(this.user);
 
   @override
   List<Object?> get props => [user];
@@ -30,7 +33,7 @@ class EmailLoginRequested extends AuthEvent {
   final String email;
   final String password;
 
-  EmailLoginRequested(this.email, this.password);
+  const EmailLoginRequested(this.email, this.password);
 
   @override
   List<Object?> get props => [email, password];
@@ -40,10 +43,23 @@ class SignUpRequested extends AuthEvent {
   final String email;
   final String password;
 
-  SignUpRequested(this.email, this.password);
+  const SignUpRequested(this.email, this.password);
 
   @override
   List<Object?> get props => [email, password];
+}
+
+class CheckAutoLogin extends AuthEvent {}
+
+class SetAutoLogin extends AuthEvent {
+  final bool enabled;
+  final String? email;
+  final String? password;
+
+  const SetAutoLogin({required this.enabled, this.email, this.password});
+
+  @override
+  List<Object?> get props => [enabled, email, password];
 }
 
 // States
@@ -90,6 +106,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GoogleLoginRequested>(_onGoogleLoginRequested);
     on<EmailLoginRequested>(_onEmailLoginRequested);
     on<SignUpRequested>(_onSignUpRequested);
+    on<CheckAutoLogin>(_onCheckAutoLogin);
+    on<SetAutoLogin>(_onSetAutoLogin);
 
     _authStateSubscription = _authRepository.authStateChanges().listen((user) {
       if (user != null) {
@@ -100,11 +118,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
   }
 
-  void _onAppStarted(AppStarted event, Emitter<AuthState> emit) {
+  Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
+    // 현재 사용자가 있는지 확인
     final user = _authRepository.getCurrentUser();
     if (user != null) {
       emit(Authenticated(user));
-    } else {
+      return;
+    }
+
+    // 자동 로그인 시도
+    emit(AuthLoading());
+    try {
+      final isAutoLoginEnabled = await _authRepository.isAutoLoginEnabled();
+      if (isAutoLoginEnabled) {
+        final user = await _authRepository.loadSavedUser();
+        if (user != null) {
+          emit(Authenticated(user));
+        } else {
+          emit(Unauthenticated());
+        }
+      } else {
+        emit(Unauthenticated());
+      }
+    } catch (e) {
+      log('자동 로그인 처리 중 오류 발생: $e');
       emit(Unauthenticated());
     }
   }
@@ -196,6 +233,49 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       emit(AuthError(errorMessage));
       emit(Unauthenticated());
+    }
+  }
+
+  Future<void> _onCheckAutoLogin(
+    CheckAutoLogin event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+
+      final isAutoLoginEnabled = await _authRepository.isAutoLoginEnabled();
+      if (isAutoLoginEnabled) {
+        await _authRepository.loadSavedUser();
+        final currentUser = _authRepository.getCurrentUser();
+
+        if (currentUser != null) {
+          emit(Authenticated(currentUser));
+        } else {
+          emit(Unauthenticated());
+        }
+      } else {
+        emit(Unauthenticated());
+      }
+    } catch (e) {
+      log('자동 로그인 확인 실패: $e');
+      emit(AuthError(e.toString()));
+      emit(Unauthenticated());
+    }
+  }
+
+  Future<void> _onSetAutoLogin(
+    SetAutoLogin event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _authRepository.setAutoLogin(
+        event.enabled,
+        email: event.email,
+        password: event.password,
+      );
+    } catch (e) {
+      log('자동 로그인 설정 저장 실패: $e');
+      emit(AuthError(e.toString()));
     }
   }
 

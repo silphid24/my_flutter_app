@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:my_flutter_app/domain/models/camino_route.dart';
 import 'package:my_flutter_app/domain/models/map_marker.dart';
 import 'package:my_flutter_app/domain/repositories/location_repository.dart';
+import 'dart:math' as math;
 
 // Events
 abstract class MapEvent extends Equatable {
@@ -162,18 +163,18 @@ class MapLoaded extends MapState {
 
   @override
   List<Object?> get props => [
-    caminoRoute,
-    currentStage,
-    selectedStage,
-    currentLocation,
-    markers,
-    polylines,
-    mapType,
-    isOffRoute,
-    visibleMarkerTypes,
-    deviationModeEnabled,
-    pilgrimModeEnabled,
-  ];
+        caminoRoute,
+        currentStage,
+        selectedStage,
+        currentLocation,
+        markers,
+        polylines,
+        mapType,
+        isOffRoute,
+        visibleMarkerTypes,
+        deviationModeEnabled,
+        pilgrimModeEnabled,
+      ];
 }
 
 class MapError extends MapState {
@@ -191,8 +192,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   StreamSubscription<LatLng>? _locationSubscription;
 
   MapBloc({required LocationRepository locationRepository})
-    : _locationRepository = locationRepository,
-      super(MapInitial()) {
+      : _locationRepository = locationRepository,
+        super(MapInitial()) {
     on<LoadMap>(_onLoadMap);
     on<UpdateCurrentLocation>(_onUpdateCurrentLocation);
     on<ToggleMarkerType>(_onToggleMarkerType);
@@ -236,6 +237,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         MapLoaded(
           caminoRoute: caminoRoute,
           currentStage: currentStage,
+          selectedStage: currentStage, // 현재 스테이지를 선택 스테이지로 설정
           currentLocation: currentLocation,
           markers: markers,
           polylines: polylines,
@@ -453,11 +455,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Set<Marker> markers = {};
 
     // 주변 마커 가져오기
-    List<MarkerType> visibleTypes =
-        visibleMarkerTypes.entries
-            .where((entry) => entry.value)
-            .map((entry) => entry.key)
-            .toList();
+    List<MarkerType> visibleTypes = visibleMarkerTypes.entries
+        .where((entry) => entry.value)
+        .map((entry) => entry.key)
+        .toList();
 
     // 현재 위치가 없는 경우 기본 위치 설정
     LatLng center = currentLocation ?? const LatLng(42.7806, -7.4149); // Sarria
@@ -511,10 +512,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     LatLng newLocation,
   ) async {
     // 기존 마커 세트에서 현재 위치 마커만 제거
-    Set<Marker> updatedMarkers =
-        existingMarkers
-            .where((marker) => marker.markerId.value != 'current_location')
-            .toSet();
+    Set<Marker> updatedMarkers = existingMarkers
+        .where((marker) => marker.markerId.value != 'current_location')
+        .toSet();
 
     // 새로운 현재 위치 마커 추가
     final currentLocationIcon = await _locationRepository.getMarkerIcon(
@@ -537,45 +537,111 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   Future<Set<Polyline>> _createRoutePolylines(CaminoRoute route) async {
     Set<Polyline> polylines = {};
 
-    // 경로 전체를 하나의 폴리라인으로 표시 (회색)
-    List<LatLng> allPoints = [];
-    for (var stage in route.stages) {
-      allPoints.addAll(stage.path);
+    // 현재 위치를 가져옴
+    LatLng? currentLocation = await _locationRepository.getCurrentLocation();
+
+    // 현재 위치와 가장 가까운 스테이지 찾기
+    CaminoStage? nearestStage;
+    int nearestStageIndex = 0;
+
+    if (currentLocation != null) {
+      double minDistance = double.infinity;
+
+      for (int i = 0; i < route.stages.length; i++) {
+        var stage = route.stages[i];
+        for (var point in stage.path) {
+          double distance = _calculateDistance(currentLocation, point);
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestStage = stage;
+            nearestStageIndex = i;
+          }
+        }
+      }
     }
 
-    polylines.add(
-      Polyline(
-        polylineId: const PolylineId('full_route'),
-        points: allPoints,
-        color: Colors.grey.shade500, // 전체 경로는 회색으로 표시
-        width: 3,
-      ),
-    );
+    // 위치 기반 추적이 안되면 기본적으로 스테이지 1과 2를 표시
+    if (nearestStage == null) {
+      // 스테이지가 최소 2개 이상 있는지 확인
+      if (route.stages.length >= 2) {
+        // 스테이지 1 (첫 번째 스테이지) 추가
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId(route.stages[0].id),
+            points: route.stages[0].path,
+            color: route.stages[0].color,
+            width: 5,
+          ),
+        );
 
-    // 각 스테이지마다 다른 색상으로 표시
-    for (var stage in route.stages) {
-      // 현재 스테이지 여부 확인 (처음에는 첫 번째 스테이지가 현재 스테이지)
-      bool isCurrentStage = (stage.id == route.stages.first.id);
-
-      // 스테이지별 색상 사용
+        // 스테이지 2 (두 번째 스테이지) 추가
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId(route.stages[1].id),
+            points: route.stages[1].path,
+            color: route.stages[1].color.withOpacity(0.7),
+            width: 3,
+            patterns: [PatternItem.dash(10), PatternItem.gap(5)],
+          ),
+        );
+      } else if (route.stages.isNotEmpty) {
+        // 스테이지가 하나만 있으면 그 하나만 표시
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId(route.stages[0].id),
+            points: route.stages[0].path,
+            color: route.stages[0].color,
+            width: 5,
+          ),
+        );
+      }
+    } else {
+      // 현재 스테이지 추가
       polylines.add(
         Polyline(
-          polylineId: PolylineId(stage.id),
-          points: stage.path,
-          color: isCurrentStage ? stage.color : Colors.grey.withOpacity(0.7),
-          width: isCurrentStage ? 5 : 3,
-          patterns:
-              isCurrentStage
-                  ? []
-                  : [
-                    PatternItem.dash(10),
-                    PatternItem.gap(5),
-                  ], // 현재 스테이지가 아니면 점선으로 표시
+          polylineId: PolylineId(nearestStage.id),
+          points: nearestStage.path,
+          color: nearestStage.color,
+          width: 5,
         ),
       );
+
+      // 다음 스테이지가 있으면 추가 (총 33개 스테이지가 있다고 가정)
+      if (nearestStageIndex < route.stages.length - 1) {
+        CaminoStage nextStage = route.stages[nearestStageIndex + 1];
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId(nextStage.id),
+            points: nextStage.path,
+            color: nextStage.color.withOpacity(0.7),
+            width: 3,
+            patterns: [PatternItem.dash(10), PatternItem.gap(5)],
+          ),
+        );
+      }
     }
 
     return polylines;
+  }
+
+  // 두 위치 간의 거리 계산 (이미 있는 함수 사용 또는 아래 함수 추가)
+  double _calculateDistance(LatLng pos1, LatLng pos2) {
+    const double earthRadius = 6371000; // 지구 반경 (미터)
+    final double lat1Rad = pos1.latitude * (math.pi / 180);
+    final double lat2Rad = pos2.latitude * (math.pi / 180);
+    final double deltaLatRad =
+        (pos2.latitude - pos1.latitude) * (math.pi / 180);
+    final double deltaLngRad =
+        (pos2.longitude - pos1.longitude) * (math.pi / 180);
+
+    final double a = math.sin(deltaLatRad / 2) * math.sin(deltaLatRad / 2) +
+        math.cos(lat1Rad) *
+            math.cos(lat2Rad) *
+            math.sin(deltaLngRad / 2) *
+            math.sin(deltaLngRad / 2);
+    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+
+    return earthRadius * c;
   }
 
   Future<Set<Polyline>> _updateStagePolylines(
@@ -621,12 +687,43 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     if (state is MapLoaded) {
       final currentState = state as MapLoaded;
 
-      // 선택한 스테이지에 맞게 폴리라인 업데이트
-      Set<Polyline> updatedPolylines = await _updateStagePolylines(
-        currentState.caminoRoute,
-        event.stage,
-        isSelected: true,
-      );
+      Set<Polyline> updatedPolylines = {};
+
+      // 선택한 스테이지 찾기
+      int selectedIndex = -1;
+      for (int i = 0; i < currentState.caminoRoute.stages.length; i++) {
+        if (currentState.caminoRoute.stages[i].id == event.stage.id) {
+          selectedIndex = i;
+          break;
+        }
+      }
+
+      if (selectedIndex >= 0) {
+        // 선택한 스테이지 추가
+        updatedPolylines.add(
+          Polyline(
+            polylineId: PolylineId('stage_${event.stage.id}'),
+            points: event.stage.path,
+            color: Colors.red, // 선택된 스테이지는 빨간색
+            width: 5,
+          ),
+        );
+
+        // 다음 스테이지가 있으면 추가
+        if (selectedIndex < currentState.caminoRoute.stages.length - 1) {
+          CaminoStage nextStage =
+              currentState.caminoRoute.stages[selectedIndex + 1];
+          updatedPolylines.add(
+            Polyline(
+              polylineId: PolylineId('stage_${nextStage.id}'),
+              points: nextStage.path,
+              color: Colors.blue.withOpacity(0.7), // 다음 스테이지는 파란색 (흐림)
+              width: 3,
+              patterns: [PatternItem.dash(10), PatternItem.gap(5)],
+            ),
+          );
+        }
+      }
 
       // 스테이지 시작 위치에 마커 추가
       Set<Marker> updatedMarkers = Set.from(currentState.markers);

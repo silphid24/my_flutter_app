@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_flutter_app/config/routes.dart';
+import 'package:my_flutter_app/presentation/router/app_router.dart';
+import 'package:my_flutter_app/domain/repositories/auth_repository.dart';
 import 'package:my_flutter_app/presentation/bloc/auth_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:my_flutter_app/data/repositories/auth_repository_impl.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -14,6 +18,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _autoLogin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoLoginSettings();
+  }
+
+  Future<void> _loadAutoLoginSettings() async {
+    try {
+      final authRepository = context.read<AuthRepository>();
+      final isAutoLoginEnabled = await authRepository.isAutoLoginEnabled();
+      setState(() {
+        _autoLogin = isAutoLoginEnabled;
+      });
+    } catch (e) {
+      debugPrint('Auto login settings load error: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -23,11 +46,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('이메일과 비밀번호를 입력해주세요')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                '${l10n.emailHint} and ${l10n.passwordHint} are required')),
+      );
       return;
     }
 
@@ -35,31 +62,80 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // 더미 로그인 실행 (Firebase 제거)
+    // Save auto login settings
+    if (_autoLogin) {
+      context.read<AuthRepository>().setAutoLogin(
+            true,
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+    }
+
+    // Execute login
     context.read<AuthBloc>().add(
-      EmailLoginRequested(
-        _emailController.text.trim(),
-        _passwordController.text,
-      ),
-    );
+          EmailLoginRequested(
+            _emailController.text.trim(),
+            _passwordController.text,
+          ),
+        );
+  }
+
+  void _adminLogin() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Create admin user object
+      final adminUser = DummyUser(
+        id: 'admin-id',
+        email: 'admin@camino.com',
+        displayName: 'Administrator',
+        photoURL: null,
+      );
+
+      // Send login success event to AuthBloc
+      context.read<AuthBloc>().add(LoggedIn(adminUser));
+
+      // Save auto login settings (optional)
+      if (_autoLogin) {
+        context.read<AuthRepository>().setAutoLogin(
+              true,
+              email: 'admin@camino.com',
+              password: 'admin123',
+            );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Admin login error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _signInWithGoogle() {
-    // 더미 Google 로그인 실행 (Firebase 제거)
+    // Execute Google login
     context.read<AuthBloc>().add(GoogleLoginRequested());
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthLoading) {
-          // BlocListener에서는 별도 처리 없음 (이미 버튼 상태로 로딩 표시)
+          // No additional handling in BlocListener (already shown in button)
         } else if (state is Authenticated) {
           setState(() {
             _isLoading = false;
           });
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          context.go(AppRoutes.home);
         } else if (state is AuthError) {
           setState(() {
             _isLoading = false;
@@ -84,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 32),
-                  // 로고
+                  // Logo
                   Container(
                     width: 120,
                     height: 120,
@@ -94,23 +170,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // 제목
-                  const Text(
-                    '로그인',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  // Title
+                  Text(
+                    l10n.loginTitle,
+                    style: const TextStyle(
+                        fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  // 환영 메시지
-                  const Text(
-                    '환영합니다! 계정 정보를 입력해주세요.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  // Welcome message
+                  Text(
+                    l10n.welcomeMessage,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
-                  // 이메일 입력 필드
+                  // Email input field
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      hintText: '이메일',
+                      hintText: l10n.emailHint,
                       hintStyle: const TextStyle(color: Colors.grey),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -133,11 +210,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  // 비밀번호 입력 필드
+                  // Password input field
                   TextField(
                     controller: _passwordController,
                     decoration: InputDecoration(
-                      hintText: '비밀번호',
+                      hintText: l10n.passwordHint,
                       hintStyle: const TextStyle(color: Colors.grey),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -159,8 +236,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: true,
                     textInputAction: TextInputAction.done,
                   ),
-                  const SizedBox(height: 24),
-                  // 로그인 버튼
+                  const SizedBox(height: 8),
+                  // Auto login checkbox
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _autoLogin,
+                        onChanged: (value) {
+                          setState(() {
+                            _autoLogin = value ?? false;
+                          });
+                          // Delete saved info when auto login is disabled
+                          if (!(value ?? true)) {
+                            context.read<AuthRepository>().setAutoLogin(false);
+                          }
+                        },
+                      ),
+                      Text(
+                        l10n.autoLoginLabel,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Login button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -173,46 +272,78 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child:
-                          _isLoading
-                              ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                              : const Text(
-                                '로그인',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
                               ),
+                            )
+                          : Text(
+                              l10n.loginButton,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Admin login button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: _isLoading ? null : _adminLogin,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF3366CC),
+                        side: const BorderSide(color: Color(0xFF3366CC)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF3366CC),
+                              ),
+                            )
+                          : Text(
+                              l10n.adminLoginButton,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // 또는 구분선
+                  // Divider
                   Row(
-                    children: const [
-                      Expanded(child: Divider(color: Colors.grey)),
+                    children: [
+                      const Expanded(child: Divider(color: Colors.grey)),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          '또는',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          l10n.orLabel,
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
-                      Expanded(child: Divider(color: Colors.grey)),
+                      const Expanded(child: Divider(color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // 소셜 로그인 버튼
+                  // Social login buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // 구글 로그인
+                      // Google login
                       _buildSocialLoginButton(
                         color: const Color(0xFFF2F2F2),
                         onPressed: _signInWithGoogle,
@@ -226,13 +357,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      // 카카오 로그인
+                      // Kakao login
                       _buildSocialLoginButton(
                         color: const Color(0xFFFFE600),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('카카오 로그인은 아직 지원되지 않습니다'),
+                              content: Text('Kakao login is not supported yet'),
                             ),
                           );
                         },
@@ -246,13 +377,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      // 네이버 로그인
+                      // Naver login
                       _buildSocialLoginButton(
                         color: const Color(0xFF00CC00),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('네이버 로그인은 아직 지원되지 않습니다'),
+                              content: Text('Naver login is not supported yet'),
                             ),
                           );
                         },
@@ -268,16 +399,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  // 회원가입 링크
+                  // Sign up link
                   GestureDetector(
                     onTap: () {
-                      Navigator.of(
-                        context,
-                      ).pushReplacementNamed(AppRoutes.signup);
+                      context.go(AppRoutes.signup);
                     },
-                    child: const Text(
-                      '계정이 없으신가요? 회원가입',
-                      style: TextStyle(color: Color(0xFF3366CC), fontSize: 14),
+                    child: Text(
+                      l10n.dontHaveAccount,
+                      style: const TextStyle(
+                          color: Color(0xFF3366CC), fontSize: 14),
                     ),
                   ),
                 ],

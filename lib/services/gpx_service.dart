@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../models/track.dart';
 import '../models/track_point.dart';
+import '../services/stage_service.dart';
 
 class GpxService {
   static final GpxService _instance = GpxService._internal();
@@ -145,9 +146,28 @@ class GpxService {
       }
 
       for (final trkSegNode in trkSegNodes) {
-        final trkptNodes = trkSegNode.findElements('trkpt');
+        final trkptNodes = trkSegNode.findElements('trkpt').toList();
+        // 최적화: 모든 포인트의 절반만 사용 (첫 포인트와 마지막 포인트는 항상 포함)
+        List<XmlElement> optimizedNodes = [];
+        if (trkptNodes.length > 2) {
+          // 첫 번째 포인트는 항상 포함
+          optimizedNodes.add(trkptNodes.first);
 
-        for (final trkptNode in trkptNodes) {
+          // 중간 포인트는 2개마다 하나씩만 선택 (50% 감소)
+          for (int i = 1; i < trkptNodes.length - 1; i += 2) {
+            optimizedNodes.add(trkptNodes[i]);
+          }
+
+          // 마지막 포인트는 항상 포함 (홀수 개일 경우)
+          if (trkptNodes.length > 1) {
+            optimizedNodes.add(trkptNodes.last);
+          }
+        } else {
+          // 포인트가 2개 이하면 그대로 사용
+          optimizedNodes = trkptNodes;
+        }
+
+        for (final trkptNode in optimizedNodes) {
           final lat = double.parse(trkptNode.getAttribute('lat') ?? '0');
           final lon = double.parse(trkptNode.getAttribute('lon') ?? '0');
 
@@ -185,6 +205,8 @@ class GpxService {
       if (points.isEmpty) {
         throw Exception('트랙 포인트를 찾을 수 없습니다');
       }
+
+      print('최적화: 원본 포인트 대비 ${points.length}개 포인트 로드됨');
 
       // 트랙 ID 생성
       final trackId = _uuid.v4();
@@ -233,10 +255,13 @@ class GpxService {
 
       // 트랙 포인트 저장
       for (final point in track.points) {
-        await txn.insert(_pointTable, {
-          'track_id': track.id,
-          ...point.toMap(),
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert(
+            _pointTable,
+            {
+              'track_id': track.id,
+              ...point.toMap(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
   }
@@ -364,7 +389,7 @@ class GpxService {
 
         if (stageTrack != null && stageTrack.points.isNotEmpty) {
           // 생성 시간은 가장 첫 번째 트랙의 시간으로 설정
-          if (combinedPoints.isEmpty && stageTrack.createdAt != null) {
+          if (combinedPoints.isEmpty) {
             createdAt = stageTrack.createdAt;
           }
 
@@ -407,6 +432,40 @@ class GpxService {
     } catch (e) {
       print('경로 결합 오류: $e');
       return loadGpxFromAsset('assets/data/Stage-1-Camino-Frances.gpx');
+    }
+  }
+
+  Future<Track?> loadTrack(String trackId) async {
+    try {
+      // 데이터베이스에서 트랙 조회 시도
+      if (!_isWebMode) {
+        try {
+          final track = await getTrack(trackId);
+          if (track != null) {
+            return track;
+          }
+        } catch (e) {
+          print('데이터베이스에서 트랙 로드 실패: $e');
+        }
+      }
+
+      // 데이터베이스에서 트랙을 찾지 못한 경우 스테이지 서비스를 통해 GPX 파일 로드 시도
+      try {
+        final stageService = StageService();
+        final stage = stageService.getStageById(trackId);
+
+        if (stage != null && stage.assetPath.isNotEmpty) {
+          return await loadGpxFromAsset(stage.assetPath);
+        }
+      } catch (e) {
+        print('스테이지에서 트랙 로드 실패: $e');
+      }
+
+      // 모든 방법이 실패한 경우 null 반환
+      return null;
+    } catch (e) {
+      print('트랙 로드 중 예외 발생: $e');
+      return null;
     }
   }
 }

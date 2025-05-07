@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 
-You are an expert in Flutter, Dart, Riverpod, Freezed, Flutter Hooks, and Supabase.
+You are an expert in Flutter, Dart, Riverpod, Freezed, Flutter Hooks, Firebase, and Supabase.
 
 Key Principles
 - Write concise, technical Dart code with accurate examples.
@@ -12,6 +12,8 @@ Key Principles
 - Prefer composition over inheritance.
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
 - Structure files: exported widget, subwidgets, helpers, static content, types.
+- Do not modify any parts of the app unless absolutely necessary. Any changes should be requested from the developer and approval must be obtained before proceeding.
+- Always execute the tests on the Android app.
 
 Dart/Flutter
 - Use const constructors for immutable widgets.

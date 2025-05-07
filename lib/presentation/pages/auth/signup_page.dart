@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_flutter_app/config/routes.dart';
 import 'package:my_flutter_app/presentation/bloc/auth_bloc.dart';
+import 'package:my_flutter_app/presentation/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -39,8 +41,9 @@ class _SignupPageState extends State<SignupPage> {
 
       // 더미 회원가입 실행 (Firebase 제거)
       context.read<AuthBloc>().add(
-        SignUpRequested(_emailController.text.trim(), _passwordController.text),
-      );
+            SignUpRequested(
+                _emailController.text.trim(), _passwordController.text),
+          );
     } else if (!_termsAccepted) {
       // 이용약관 동의가 필요하다는 알림
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,7 +61,7 @@ class _SignupPageState extends State<SignupPage> {
         if (state is AuthLoading) {
           // 이미 버튼 상태로 로딩을 표시하므로 여기서는 추가 작업 없음
         } else if (state is Authenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          context.go(AppRoutes.home);
         } else if (state is AuthError) {
           setState(() {
             _isLoading = false;
@@ -249,16 +252,15 @@ class _SignupPageState extends State<SignupPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _signup,
-                      child:
-                          _isLoading
-                              ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Text('Create Account'),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('Create Account'),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -273,7 +275,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pop();
+                          context.pop();
                         },
                         child: const Text(
                           'Log In',

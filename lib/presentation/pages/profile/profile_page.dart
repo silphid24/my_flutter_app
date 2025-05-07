@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_flutter_app/config/routes.dart';
 import 'package:my_flutter_app/presentation/bloc/auth_bloc.dart';
+import 'package:my_flutter_app/presentation/router/app_router.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -57,7 +58,7 @@ class ProfilePage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '계정 ID: ${state.user.uid}',
+                                  '계정 ID: ${state.user.id}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[600],
@@ -100,25 +101,24 @@ class ProfilePage extends StatelessWidget {
   void _showLogoutConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('로그아웃'),
-            content: const Text('정말 로그아웃 하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('취소'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // 로그아웃 이벤트 발생
-                  context.read<AuthBloc>().add(LoggedOut());
-                },
-                child: const Text('로그아웃', style: TextStyle(color: Colors.red)),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('정말 로그아웃 하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // 로그아웃 이벤트 발생
+              context.read<AuthBloc>().add(LoggedOut());
+            },
+            child: const Text('로그아웃', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }

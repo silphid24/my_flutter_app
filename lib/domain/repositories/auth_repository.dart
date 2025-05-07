@@ -11,4 +11,13 @@ abstract class AuthRepository {
   Future<void> signOut();
   DummyUser? getCurrentUser();
   Stream<DummyUser?> authStateChanges();
+
+  // 자동 로그인을 활성화/비활성화합니다
+  Future<void> setAutoLogin(bool enabled, {String? email, String? password});
+
+  // 자동 로그인이 활성화되어 있는지 확인합니다
+  Future<bool> isAutoLoginEnabled();
+
+  // 저장된 사용자 정보로 자동 로그인합니다
+  Future<DummyUser?> loadSavedUser();
 }

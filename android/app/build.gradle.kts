@@ -12,8 +12,8 @@ android {
     compileSdk = flutter.compileSdkVersion
     
     // 명시적으로 NDK 버전 설정
-    ndkVersion = "26.3.11579264" // 플러그인 호환성을 위해 업데이트된 NDK 버전
-
+    ndkVersion = "29.0.13113456" // 시스템에 설치된 NDK 버전
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -35,6 +35,9 @@ android {
         
         // 구글 맵 API 키 설정
         manifestPlaceholders["MAPS_API_KEY"] = "AIzaSyBXPSobl9bQL60ZXuvkEiM7kI0TFaxcQPk"
+        
+        // OpenGL ES 버전 설정 (2.0으로 변경)
+        manifestPlaceholders["OPENGL_VERSION"] = 2
     }
 
     buildTypes {
@@ -50,6 +53,18 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
+    }
+    
+    // OpenGL ES 관련 문제 해결을 위한 설정
+    aaptOptions {
+        noCompress.add("tflite")
+        noCompress.add("lite")
+    }
+    
+    // 추가 OpenGL ES 문제 해결을 위한 설정
+    buildFeatures {
+        renderScript = false
+        aidl = false
     }
 }
 

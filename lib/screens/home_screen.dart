@@ -3,12 +3,28 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:my_flutter_app/screens/stages_map_screen.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart' as latlong2;
+import 'package:my_flutter_app/models/track.dart';
+import 'package:my_flutter_app/services/gpx_service.dart';
 
 class HomeScreen extends HookConsumerWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentTrack = useState<Track?>(null);
+
+    // Load current track on init
+    useEffect(() {
+      _loadCurrentTrack(currentTrack);
+      return null;
+    }, []);
+
+    // 시작점과 도착점 위치 정의
+    const startLocation =
+        latlong2.LatLng(43.1634, -1.2374); // Saint Jean Pied de Port
+    const endLocation = latlong2.LatLng(43.0096, -1.3195); // Roncesvalles
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -16,13 +32,15 @@ class HomeScreen extends HookConsumerWidget {
             children: [
               _buildHeader(),
               _buildDivider(),
-              _buildTodaysStage(),
+              _buildTodaysStage(context, startLocation, endLocation),
               _buildStageProgress(context),
               const SizedBox(height: 10),
               _buildDivider(),
               _buildRecommendedRoutes(),
               _buildPointsOfInterest(),
               _buildStageDetails(),
+              _buildLandmarks(context),
+              _buildElevationCard(context),
               const SizedBox(height: 80), // Bottom space for navigation bar
             ],
           ),
@@ -121,7 +139,8 @@ class HomeScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildTodaysStage() {
+  Widget _buildTodaysStage(BuildContext context, latlong2.LatLng startLocation,
+      latlong2.LatLng endLocation) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -146,24 +165,34 @@ class HomeScreen extends HookConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Expanded(
-                    child: Text(
-                      'Saint Jean',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _navigateToLocation(
+                          context, startLocation, 'Saint Jean'),
+                      child: const Text(
+                        'Saint Jean',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                   ),
                   const Icon(Icons.arrow_forward, size: 30),
-                  const Expanded(
-                    child: Text(
-                      'Roncesvalles',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _navigateToLocation(
+                          context, endLocation, 'Roncesvalles'),
+                      child: const Text(
+                        'Roncesvalles',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                   ),
@@ -559,6 +588,176 @@ class HomeScreen extends HookConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // 현재 트랙 로드 함수
+  Future<void> _loadCurrentTrack(ValueNotifier<Track?> currentTrack) async {
+    try {
+      final gpxService = GpxService();
+      final track = await gpxService.loadGpxFromAsset(
+        'assets/data/Stage-1-Camino-Frances.gpx',
+      );
+
+      currentTrack.value = track;
+    } catch (e) {
+      print('트랙 로드 오류: $e');
+    }
+  }
+
+  // 특정 위치로 지도 이동 함수
+  void _navigateToLocation(
+      BuildContext context, latlong2.LatLng location, String name) {
+    // 위치 정보 전달하며 지도 화면으로 이동
+    context.push('/map', extra: {'location': location, 'name': name});
+  }
+
+  Widget _buildLandmarks(BuildContext context) {
+    final List<Map<String, String>> landmarks = [
+      {
+        'name': '롱스바예 수도원',
+        'distance': '32km',
+        'type': '역사적 장소',
+        'rating': '4.8',
+      },
+      {
+        'name': '추리 고개',
+        'distance': '20km',
+        'type': '자연 명소',
+        'rating': '4.6',
+      },
+      {
+        'name': '오리손 산장',
+        'distance': '8km',
+        'type': '알베르게',
+        'rating': '4.5',
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '주요 랜드마크',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListView.separated(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: landmarks.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final landmark = landmarks[index];
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  landmark['name']!,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                subtitle: Text('${landmark['type']} • ${landmark['distance']}'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text('${landmark['rating']}'),
+                  ],
+                ),
+                onTap: () {
+                  // 여기에 랜드마크 상세 정보로 이동하는 코드를 추가할 수 있습니다
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('${landmark['name'].toString()} 선택됨')),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildElevationCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '고도 정보',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildElevationStat('시작 고도', '165m'),
+                _buildElevationStat('최고 고도', '1,430m'),
+                _buildElevationStat('종료 고도', '960m'),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                height: 100,
+                width: double.infinity,
+                color: Colors.grey[200],
+                alignment: Alignment.center,
+                child: const Text(
+                  '고도 차트가 이곳에 표시됩니다',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildElevationStat(String title, String value) {
+    return Column(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -11,6 +11,7 @@
 ## Detailed Product Description
 Based on firsthand experience walking the Camino de Santiago, this mobile app will:
 
+- Default language is English. Services will provide spanish, korean, germany, japanese, Chinese.
 - Seamlessly integrate GPS‑based navigation to show pilgrims exactly where they are on the trail and alert them if they deviate.
 - Curate only the most relevant nearby infrastructure—such as accommodations, restaurants, pharmacies, and points of interest—displaying up to two suggestions per category.
 - Offer data‑driven route recommendations based on popularity and logistical convenience.

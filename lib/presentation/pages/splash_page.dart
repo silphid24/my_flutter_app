@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_app/config/routes.dart';
+import 'package:my_flutter_app/presentation/router/app_router.dart';
 import 'package:my_flutter_app/domain/repositories/auth_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:my_flutter_app/presentation/bloc/auth_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
     super.initState();
@@ -25,24 +28,26 @@ class _SplashPageState extends State<SplashPage> {
       if (!mounted) return;
 
       // 현재 사용자 확인
-      final authRepository = context.read<AuthRepository>();
-      final currentUser = authRepository.getCurrentUser();
+      final authBloc = context.read<AuthBloc>();
+      final authState = authBloc.state;
 
-      if (currentUser != null) {
+      if (authState is Authenticated) {
         // 로그인된 사용자가 있으면 홈 화면으로 이동
         if (mounted) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          debugPrint('이미 로그인된 사용자가 있습니다: ${authState.user.email}');
+          context.go(AppRoutes.home);
         }
       } else {
         // 로그인된 사용자가 없으면 로그인 화면으로 이동
         if (mounted) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+          debugPrint('로그인 화면으로 이동합니다');
+          context.go(AppRoutes.login);
         }
       }
     } catch (e) {
-      print('스플래시 화면 오류: $e');
+      debugPrint('스플래시 화면 오류: $e');
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+        context.go(AppRoutes.login);
       }
     }
   }
