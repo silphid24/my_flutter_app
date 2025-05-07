@@ -93,7 +93,7 @@ GoRouter router(RouterRef ref) {
       ),
       GoRoute(
         path: AppRoutes.fullCaminoMap,
-        builder: (context, state) => const CaminoMapScreen(useGoogleMaps: true),
+        builder: (context, state) => const CaminoMapScreen(),
       ),
       GoRoute(
         path: AppRoutes.routes,

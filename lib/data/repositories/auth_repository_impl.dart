@@ -45,8 +45,8 @@ class AuthRepositoryImpl implements AuthRepository {
       StreamController<DummyUser?>.broadcast();
 
   AuthRepositoryImpl({FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
-    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-      _googleSignIn = googleSignIn ?? GoogleSignIn() {
+      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn() {
     // Firebase 인증 상태 변경 리스닝
     _firebaseAuth.authStateChanges().listen((User? user) {
       if (user != null) {
@@ -71,14 +71,14 @@ class AuthRepositoryImpl implements AuthRepository {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _firebaseAuth
-          .signInWithCredential(credential);
+      final UserCredential userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
       final User? user = userCredential.user;
 
       if (user == null) return null;
       return DummyUser.fromFirebaseUser(user);
     } catch (e) {
-      print('Google 로그인 에러: $e');
+      log('Google 로그인 에러: $e');
       return null;
     }
   }

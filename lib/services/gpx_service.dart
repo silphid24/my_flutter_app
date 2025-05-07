@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:xml/xml.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../models/track.dart';
 import '../models/track_point.dart';
@@ -20,6 +22,9 @@ class GpxService {
   final _uuid = Uuid();
   bool _dbInitialized = false;
   bool _isWebMode = false;
+
+  // 진행 중인 비동기 로드 작업을 추적하기 위한 변수
+  bool _isCancelled = false;
 
   factory GpxService() {
     return _instance;
@@ -91,9 +96,23 @@ class GpxService {
     );
   }
 
+  void cancelLoading() {
+    _isCancelled = true;
+    debugPrint('GPX 로드 작업이 취소되었습니다.');
+  }
+
   Future<Track?> loadGpxFromAsset(String assetPath) async {
+    // 이전 로드가 취소되었다면 초기화
+    _isCancelled = false;
+
     try {
       final data = await rootBundle.loadString(assetPath);
+      // 로드가 취소되었으면 중단
+      if (_isCancelled) {
+        debugPrint('GPX 로드가 취소되었습니다: $assetPath');
+        return null;
+      }
+
       final document = XmlDocument.parse(data);
 
       // GPX 파싱 (네임스페이스 처리 간소화)
@@ -103,6 +122,12 @@ class GpxService {
       final metadataNodes = document.findAllElements('metadata');
       if (metadataNodes.isEmpty) {
         throw Exception('메타데이터 요소를 찾을 수 없습니다');
+      }
+
+      // 로드가 취소되었는지 확인
+      if (_isCancelled) {
+        debugPrint('메타데이터 추출 중 로드가 취소되었습니다.');
+        return null;
       }
 
       final metadata = metadataNodes.first;
@@ -115,6 +140,12 @@ class GpxService {
       } else {
         // 시간 정보가 없는 경우 현재 시간 사용
         createdAt = DateTime.now();
+      }
+
+      // 로드가 취소되었는지 확인
+      if (_isCancelled) {
+        debugPrint('시간 정보 추출 중 로드가 취소되었습니다.');
+        return null;
       }
 
       // 트랙 정보 추출
@@ -137,6 +168,12 @@ class GpxService {
         type = typeNodes.first.innerText;
       }
 
+      // 로드가 취소되었는지 확인
+      if (_isCancelled) {
+        debugPrint('트랙 정보 추출 중 로드가 취소되었습니다.');
+        return null;
+      }
+
       // 트랙 포인트 추출
       final points = <TrackPoint>[];
       final trkSegNodes = trkNode.findElements('trkseg');
@@ -145,8 +182,21 @@ class GpxService {
         throw Exception('트랙 세그먼트를 찾을 수 없습니다');
       }
 
+      // 로드가 취소되었는지 확인
+      if (_isCancelled) {
+        debugPrint('GPX 로드가 취소되었습니다: $assetPath');
+        return null;
+      }
+
       for (final trkSegNode in trkSegNodes) {
         final trkptNodes = trkSegNode.findElements('trkpt').toList();
+
+        // 로드가 취소되었는지 확인
+        if (_isCancelled) {
+          debugPrint('GPX 포인트 처리 중 로드가 취소되었습니다: $assetPath');
+          return null;
+        }
+
         // 최적화: 모든 포인트의 절반만 사용 (첫 포인트와 마지막 포인트는 항상 포함)
         List<XmlElement> optimizedNodes = [];
         if (trkptNodes.length > 2) {
@@ -156,6 +206,12 @@ class GpxService {
           // 중간 포인트는 2개마다 하나씩만 선택 (50% 감소)
           for (int i = 1; i < trkptNodes.length - 1; i += 2) {
             optimizedNodes.add(trkptNodes[i]);
+
+            // 주기적으로 취소 확인 (매 50개 포인트마다)
+            if (i % 50 == 0 && _isCancelled) {
+              debugPrint('포인트 최적화 중 로드가 취소되었습니다.');
+              return null;
+            }
           }
 
           // 마지막 포인트는 항상 포함 (홀수 개일 경우)
@@ -192,13 +248,26 @@ class GpxService {
             }
           }
 
-          points.add(
-            TrackPoint(
-              position: LatLng(lat, lon),
-              elevation: elevation,
-              time: time,
-            ),
-          );
+          // 취소 확인
+          if (_isCancelled) {
+            debugPrint('포인트 생성 중 로드가 취소되었습니다.');
+            return null;
+          }
+
+          try {
+            points.add(
+              TrackPoint(
+                position: LatLng(lat, lon),
+                elevation: elevation,
+                time: time,
+              ),
+            );
+            print('TrackPoint 생성 성공: lat=$lat, lon=$lon');
+          } catch (e) {
+            print('TrackPoint 생성 오류: $e');
+            // 오류를 무시하지만 기록
+            debugPrint('TrackPoint 생성 실패: $e');
+          }
         }
       }
 
@@ -207,6 +276,12 @@ class GpxService {
       }
 
       print('최적화: 원본 포인트 대비 ${points.length}개 포인트 로드됨');
+
+      // 최종 취소 확인
+      if (_isCancelled) {
+        debugPrint('트랙 생성 전 로드가 취소되었습니다.');
+        return null;
+      }
 
       // 트랙 ID 생성
       final trackId = _uuid.v4();
@@ -223,6 +298,12 @@ class GpxService {
       // 웹 모드가 아닐 때만 데이터베이스에 저장 시도
       if (!_isWebMode) {
         try {
+          // 마지막 취소 확인
+          if (_isCancelled) {
+            debugPrint('데이터베이스 저장 전 로드가 취소되었습니다.');
+            return null;
+          }
+
           await saveTrack(track);
           print('트랙 저장 성공: ${track.name}, 포인트 수: ${track.points.length}');
         } catch (e) {
@@ -436,18 +517,35 @@ class GpxService {
   }
 
   Future<Track?> loadTrack(String trackId) async {
+    // 이전 로드가 취소되었다면 초기화
+    _isCancelled = false;
+
     try {
+      // 주기적으로 취소 여부 확인
+      if (_isCancelled) {
+        debugPrint('트랙 로드가 취소되었습니다: $trackId');
+        return null;
+      }
+
       // 데이터베이스에서 트랙 조회 시도
       if (!_isWebMode) {
         try {
+          // 취소 여부 재확인
+          if (_isCancelled) return null;
+
           final track = await getTrack(trackId);
           if (track != null) {
             return track;
           }
         } catch (e) {
           print('데이터베이스에서 트랙 로드 실패: $e');
+          // 작업이 취소되었는지 확인
+          if (_isCancelled) return null;
         }
       }
+
+      // 취소 여부 재확인
+      if (_isCancelled) return null;
 
       // 데이터베이스에서 트랙을 찾지 못한 경우 스테이지 서비스를 통해 GPX 파일 로드 시도
       try {
@@ -455,13 +553,18 @@ class GpxService {
         final stage = stageService.getStageById(trackId);
 
         if (stage != null && stage.assetPath.isNotEmpty) {
+          // 취소 여부 재확인
+          if (_isCancelled) return null;
+
           return await loadGpxFromAsset(stage.assetPath);
         }
       } catch (e) {
         print('스테이지에서 트랙 로드 실패: $e');
+        // 작업이 취소되었는지 확인
+        if (_isCancelled) return null;
       }
 
-      // 모든 방법이 실패한 경우 null 반환
+      // 모든 방법이 실패한 경우 null, 혹은 취소된 경우 null 반환
       return null;
     } catch (e) {
       print('트랙 로드 중 예외 발생: $e');

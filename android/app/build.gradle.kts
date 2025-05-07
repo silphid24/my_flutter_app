@@ -28,7 +28,7 @@ android {
         applicationId = "com.nextwe.caminandes"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 23 // Firebase Auth를 위해 23으로 업데이트
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

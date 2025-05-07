@@ -13,561 +13,285 @@ import 'package:my_flutter_app/domain/repositories/location_repository.dart';
 import 'package:my_flutter_app/services/gpx_service.dart';
 import 'package:my_flutter_app/models/track.dart';
 import 'package:my_flutter_app/models/track_point.dart';
+import 'package:my_flutter_app/services/stage_service.dart';
+import 'package:my_flutter_app/presentation/features/camino/utils/map_utils.dart';
+import 'package:my_flutter_app/utils/stage_converter.dart';
 
 class LocationRepositoryImpl implements LocationRepository {
   final Location _location = Location();
-  late CaminoRoute _caminoRoute;
-  List<Track>? _gpxTracks;
-  bool _isInitialized = false;
+  final StageService _stageService = StageService();
+  final GpxService _gpxService = GpxService();
 
-  // 샘플 데이터 (실제로는 API나 DB에서 가져옴)
-  final List<MapMarker> _allMarkers = [
-    MapMarker(
-      id: 'accom-1',
-      title: 'Albergue San Lazaro',
-      description: '순례자들이 많이 이용하는 인기 있는 알베르게',
-      position: const LatLng(42.7806, -7.4149), // Sarria
-      type: MarkerType.accommodation,
-    ),
-    MapMarker(
-      id: 'accom-2',
-      title: 'Albergue Portomarin',
-      description: '포르토마린 중심부에 위치한 알베르게',
-      position: const LatLng(42.8042, -7.6153), // Portomarín
-      type: MarkerType.accommodation,
-    ),
-    MapMarker(
-      id: 'rest-1',
-      title: 'Cafe del Camino',
-      description: '순례자들을 위한 카페 및 레스토랑',
-      position: const LatLng(42.7826, -7.4169), // Near Sarria
-      type: MarkerType.restaurant,
-    ),
-    MapMarker(
-      id: 'rest-2',
-      title: 'Restaurant O Mirador',
-      description: '갈리시아 전통 음식을 맛볼 수 있는 레스토랑',
-      position: const LatLng(42.8052, -7.6143), // Near Portomarín
-      type: MarkerType.restaurant,
-    ),
-    MapMarker(
-      id: 'pharm-1',
-      title: 'Farmacia Sarria',
-      description: '사리아 중심부에 위치한 약국',
-      position: const LatLng(42.7816, -7.4159), // Near Sarria
-      type: MarkerType.pharmacy,
-    ),
-    MapMarker(
-      id: 'pharm-2',
-      title: 'Farmacia Portomarín',
-      description: '포르토마린 약국',
-      position: const LatLng(42.8047, -7.6163), // Near Portomarín
-      type: MarkerType.pharmacy,
-    ),
-    MapMarker(
-      id: 'landmark-1',
-      title: 'Iglesia de San Salvador',
-      description: '사리아의 역사적인 교회',
-      position: const LatLng(42.7811, -7.4144), // Sarria
-      type: MarkerType.landmark,
-    ),
-    MapMarker(
-      id: 'landmark-2',
-      title: 'Iglesia de San Juan',
-      description: '포르토마린의 유명한 로마네스크 교회',
-      position: const LatLng(42.8037, -7.6158), // Portomarín
-      type: MarkerType.landmark,
-    ),
-    MapMarker(
-      id: 'accom-sjpdp',
-      title: 'Albergue Ultreia',
-      description: '생장 피드 포르트 순례자 숙소',
-      position: const LatLng(43.1634, -1.2374), // Saint Jean
-      type: MarkerType.accommodation,
-    ),
-    MapMarker(
-      id: 'accom-roncesvalles',
-      title: 'Albergue de Peregrinos de Roncesvalles',
-      description: '론세스바예스 순례자 숙소',
-      position: const LatLng(43.0096, -1.3195), // Roncesvalles
-      type: MarkerType.accommodation,
-    ),
-    MapMarker(
-      id: 'landmark-sjpdp',
-      title: 'Puerta de Santiago',
-      description: '생장 피드 포르트의 산티아고 문',
-      position: const LatLng(43.1636, -1.2368),
-      type: MarkerType.landmark,
-    ),
-    MapMarker(
-      id: 'landmark-roncesvalles',
-      title: 'Colegiata de Roncesvalles',
-      description: '론세스바예스 순례자 교회',
-      position: const LatLng(43.0092, -1.3197),
-      type: MarkerType.landmark,
-    ),
-  ];
+  // 스트림 컨트롤러
+  final StreamController<LatLng> _locationStreamController =
+      StreamController<LatLng>.broadcast();
 
-  StreamController<LatLng>? _locationController;
+  // 카미노 경로 캐싱
+  CaminoRoute? _caminoRoute;
+  List<LatLng> _completePath = [];
 
-  Future<void> _initialize() async {
-    if (_isInitialized) return;
+  // 마커 아이콘 캐싱
+  final Map<MarkerType, BitmapDescriptor> _markerIcons = {};
 
+  LocationRepositoryImpl() {
+    _initLocationService();
+  }
+
+  /// 위치 서비스 초기화
+  Future<void> _initLocationService() async {
     try {
-      // 모든 스테이지 GPX 파일 로드
-      _gpxTracks = await _loadAllGpxTracks();
-
-      if (_gpxTracks != null && _gpxTracks!.isNotEmpty) {
-        // GPX 트랙을 사용하여 CaminoRoute 생성
-        _caminoRoute = await _createCaminoRouteFromGpxTracks(_gpxTracks!);
-      } else {
-        // GPX 로드 실패 시 기본 경로 생성
-        _caminoRoute = _createDefaultCaminoRoute();
-      }
-
-      _isInitialized = true;
-    } catch (e) {
-      debugPrint('경로 초기화 오류: $e');
-      // 오류 발생 시 기본 경로 사용
-      _caminoRoute = _createDefaultCaminoRoute();
-      _isInitialized = true;
-    }
-  }
-
-  // 모든 스테이지 GPX 파일 로드
-  Future<List<Track>> _loadAllGpxTracks() async {
-    final gpxService = GpxService();
-    List<Track> tracks = [];
-
-    try {
-      // 파일 이름 패턴 생성
-      List<String> stageFiles = [];
-
-      // Stage 1~33 파일 이름 생성 (Stage-27-28은 특별 처리)
-      for (int i = 1; i <= 33; i++) {
-        if (i == 27 || i == 28) {
-          if (!stageFiles.contains(
-            'assets/data/Stages-27-28.-Camino-Frances.gpx',
-          )) {
-            stageFiles.add('assets/data/Stages-27-28.-Camino-Frances.gpx');
-          }
-        } else {
-          if (i == 1) {
-            stageFiles.add('assets/data/Stage-1-Camino-Frances.gpx');
-          } else {
-            stageFiles.add('assets/data/Stage-$i.-Camino-Frances.gpx');
-          }
+      bool serviceEnabled = await _location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await _location.requestService();
+        if (!serviceEnabled) {
+          return;
         }
       }
 
-      // 디버깅: 로드할 파일 목록 출력
-      debugPrint('로드할 스테이지 파일 목록: ${stageFiles.join(', ')}');
-
-      // 각 파일 로드
-      for (String file in stageFiles) {
-        try {
-          Track? track = await gpxService.loadGpxFromAsset(file);
-          if (track != null) {
-            // 트랙 이름 설정 (파일 이름에서 추출)
-            String stageName = file.split('/').last;
-            stageName = stageName
-                .replaceAll('Stage-', '')
-                .replaceAll('Stages-', '');
-            stageName = stageName
-                .replaceAll('-Camino-Frances.gpx', '')
-                .replaceAll('.-Camino-Frances.gpx', '');
-
-            // Stage 번호와 이름을 매핑
-            String fullName = _getStageFullName(stageName);
-            track = Track(
-              id: 'stage_${stageName.replaceAll('-', '_')}',
-              name: fullName,
-              type: 'walking',
-              points: track.points,
-              createdAt: DateTime.now(),
-            );
-
-            tracks.add(track);
-            debugPrint(
-              '로드됨: $file (${track.name}, 포인트 수: ${track.points.length})',
-            );
-          }
-        } catch (e) {
-          debugPrint('파일 로드 오류: $file - $e');
+      PermissionStatus permissionGranted = await _location.hasPermission();
+      if (permissionGranted == PermissionStatus.denied) {
+        permissionGranted = await _location.requestPermission();
+        if (permissionGranted != PermissionStatus.granted) {
+          return;
         }
       }
 
-      // 스테이지 순서대로 정렬
-      tracks.sort((a, b) {
-        // Stage 1을 항상 첫 번째로
-        if (a.name.contains('Saint-Jean') ?? false) return -1;
-        if (b.name.contains('Saint-Jean') ?? false) return 1;
-
-        // 숫자로 정렬
-        int? numA = _extractStageNumber(a.name ?? '');
-        int? numB = _extractStageNumber(b.name ?? '');
-
-        if (numA != null && numB != null) {
-          return numA.compareTo(numB);
-        }
-
-        return (a.name ?? '').compareTo(b.name ?? '');
-      });
-
-      debugPrint('총 로드된 스테이지 수: ${tracks.length}');
-      for (int i = 0; i < tracks.length; i++) {
-        debugPrint('스테이지 #${i + 1}: ${tracks[i].name}');
-      }
-    } catch (e) {
-      debugPrint('GPX 트랙 로드 오류: $e');
-    }
-
-    return tracks;
-  }
-
-  // 스테이지 이름 매핑
-  String _getStageFullName(String stageId) {
-    final Map<String, String> stageNames = {
-      '1': 'Saint-Jean-Pied-de-Port → Roncesvalles',
-      '2': 'Roncesvalles → Zubiri',
-      '3': 'Zubiri → Pamplona',
-      '4': 'Pamplona → Puente la Reina',
-      '5': 'Puente la Reina → Estella',
-      '6': 'Estella → Los Arcos',
-      '7': 'Los Arcos → Logroño',
-      '8': 'Logroño → Nájera',
-      '9': 'Nájera → Santo Domingo de la Calzada',
-      '10': 'Santo Domingo de la Calzada → Belorado',
-      '11': 'Belorado → San Juan de Ortega',
-      '12': 'San Juan de Ortega → Burgos',
-      '13': 'Burgos → Hontanas',
-      '14': 'Hontanas → Boadilla del Camino',
-      '15': 'Boadilla del Camino → Carrión de los Condes',
-      '16': 'Carrión de los Condes → Terradillos de los Templarios',
-      '17': 'Terradillos de los Templarios → El Burgo Ranero',
-      '18': 'El Burgo Ranero → León',
-      '19': 'León → San Martín del Camino',
-      '20': 'San Martín del Camino → Astorga',
-      '21': 'Astorga → Rabanal del Camino',
-      '22': 'Rabanal del Camino → Ponferrada',
-      '23': 'Ponferrada → Villafranca del Bierzo',
-      '24': 'Villafranca del Bierzo → O Cebreiro',
-      '25': 'O Cebreiro → Triacastela',
-      '26': 'Triacastela → Sarria',
-      '27-28': 'Sarria → Portomarín → Palas de Rei',
-      '29': 'Palas de Rei → Arzúa',
-      '30': 'Arzúa → O Pedrouzo',
-      '31': 'O Pedrouzo → Santiago de Compostela',
-      '32': 'Santiago de Compostela → Negreira',
-      '33': 'Negreira → Olveiroa',
-    };
-
-    return stageNames[stageId] ?? '스테이지 $stageId';
-  }
-
-  // 스테이지 이름에서 번호 추출
-  int? _extractStageNumber(String stageName) {
-    // "27-28" 같은 복합 스테이지 처리
-    if (stageName.contains('-')) {
-      try {
-        return int.parse(stageName.split('-')[0]);
-      } catch (e) {
-        return null;
-      }
-    }
-
-    // 일반 숫자 추출
-    RegExp regExp = RegExp(r'(\d+)');
-    Match? match = regExp.firstMatch(stageName);
-    if (match != null) {
-      try {
-        return int.parse(match.group(1) ?? '');
-      } catch (e) {
-        return null;
-      }
-    }
-
-    return null;
-  }
-
-  Future<CaminoRoute> _createCaminoRouteFromGpxTracks(
-    List<Track> tracks,
-  ) async {
-    List<CaminoStage> stages = [];
-
-    // 스테이지별 색상 (순환)
-    List<Color> stageColors = [
-      Colors.blue,
-      Colors.red,
-      Colors.green,
-      Colors.purple,
-      Colors.orange,
-      Colors.teal,
-      Colors.pink,
-    ];
-
-    // 각 트랙을 하나의 스테이지로 변환
-    for (int i = 0; i < tracks.length; i++) {
-      final track = tracks[i];
-      final stageName = track.name ?? 'Stage ${i + 1}';
-
-      // 경로 포인트 추출 및 변환
-      List<LatLng> routePath =
-          track.points
-              .map(
-                (point) =>
-                    LatLng(point.position.latitude, point.position.longitude),
-              )
-              .toList();
-
-      // 경로가 너무 길면 샘플링하여 포인트 수 줄이기
-      if (routePath.length > 300) {
-        routePath = _samplePoints(routePath, 300);
-      }
-
-      // 거리 계산 (대략적인 거리)
-      double distanceKm = 0;
-      for (int j = 0; j < routePath.length - 1; j++) {
-        distanceKm += _calculateDistance(routePath[j], routePath[j + 1]) / 1000;
-      }
-
-      // 고도 변화 계산 (대략적인 값, GPX에서 추출 가능하면 사용)
-      double elevationGain = 0;
-      for (int j = 0; j < track.points.length - 1; j++) {
-        double diff =
-            (track.points[j + 1].elevation ?? 0) -
-            (track.points[j].elevation ?? 0);
-        if (diff > 0) elevationGain += diff;
-      }
-
-      // 난이도 결정 (거리와 고도 변화에 따라)
-      String difficulty;
-      if (distanceKm > 25 || elevationGain > 800) {
-        difficulty = 'Hard';
-      } else if (distanceKm > 20 || elevationGain > 500) {
-        difficulty = 'Moderate';
-      } else {
-        difficulty = 'Easy';
-      }
-
-      // 예상 소요 시간 (4km/h 기준)
-      int minutes = (distanceKm * 60 / 4).round();
-
-      // 스테이지 생성
-      CaminoStage stage = CaminoStage(
-        id: 'stage-${i + 1}',
-        name: stageName,
-        description: '카미노 프란세스 스테이지 ${i + 1}',
-        distanceKm: double.parse(distanceKm.toStringAsFixed(1)),
-        elevationGainM: elevationGain,
-        path: routePath,
-        estimatedTime: Duration(minutes: minutes),
-        difficulty: difficulty,
-        color: stageColors[i % stageColors.length], // 색상 순환 할당
+      // 위치 정확도 설정
+      await _location.changeSettings(
+        accuracy: LocationAccuracy.high,
+        interval: 900000, // 15분(15 * 60 * 1000 = 900,000밀리초)마다 업데이트
       );
 
-      stages.add(stage);
-    }
+      // 위치 업데이트 구독 및 스트림으로 변환
+      _location.onLocationChanged.listen((LocationData locationData) {
+        if (locationData.latitude != null && locationData.longitude != null) {
+          _locationStreamController.add(
+            LatLng(locationData.latitude!, locationData.longitude!),
+          );
+        }
+      });
 
-    // 전체 경로를 담은 CaminoRoute 생성
-    return CaminoRoute(
-      id: 'camino-frances-full',
-      name: 'Camino Frances',
-      description: '생장에서 산티아고까지의 카미노 프란세스 전체 경로',
-      stages: stages,
-    );
-  }
-
-  List<LatLng> _samplePoints(List<LatLng> points, int targetCount) {
-    if (points.length <= targetCount) return points;
-
-    // 균등한 간격으로 샘플링
-    List<LatLng> sampled = [];
-    double interval = points.length / targetCount;
-
-    for (int i = 0; i < targetCount; i++) {
-      int index = (i * interval).floor();
-      if (index >= points.length) index = points.length - 1;
-      sampled.add(points[index]);
-    }
-
-    // 시작점과 끝점은 반드시 포함
-    if (sampled.first != points.first) sampled[0] = points.first;
-    if (sampled.last != points.last) sampled[sampled.length - 1] = points.last;
-
-    return sampled;
-  }
-
-  // 경로의 일부분을 추출하는 헬퍼 함수
-  List<LatLng> _extractPathSegment(List<LatLng> fullPath, int start, int end) {
-    if (start < 0) start = 0;
-    if (end >= fullPath.length) end = fullPath.length - 1;
-
-    return fullPath.sublist(start, end);
-  }
-
-  CaminoRoute _createDefaultCaminoRoute() {
-    // GPX 로드 실패 시 사용할 기본 경로
-    return CaminoRoute(
-      id: 'camino-frances-stage-1',
-      name: 'Camino Frances - Stage 1',
-      description: '카미노 프란세스의 첫 번째 구간',
-      stages: [
-        CaminoStage(
-          id: 'sjpdp-roncesvalles',
-          name: 'Saint-Jean-Pied-de-Port → Roncesvalles',
-          description: '피레네 산맥을 넘는 첫 번째 구간',
-          distanceKm: 25.1,
-          elevationGainM: 1200,
-          path: [
-            // 단순화된 경로
-            const LatLng(43.1634, -1.2374), // Saint-Jean
-            const LatLng(43.1589, -1.2412),
-            const LatLng(43.1523, -1.2467),
-            const LatLng(43.1445, -1.2518),
-            const LatLng(43.1387, -1.2602),
-            const LatLng(43.1310, -1.2691),
-            const LatLng(43.1225, -1.2784),
-            const LatLng(43.1156, -1.2839),
-            const LatLng(43.1078, -1.2907),
-            const LatLng(43.0974, -1.2989),
-            const LatLng(43.0847, -1.3078),
-            const LatLng(43.0096, -1.3195), // Roncesvalles
-          ],
-          estimatedTime: const Duration(hours: 8),
-          difficulty: 'Hard',
-        ),
-        CaminoStage(
-          id: 'roncesvalles-zubiri',
-          name: 'Roncesvalles → Zubiri',
-          description: '피레네 산맥을 지나 완만한 구간으로 들어서는 길',
-          distanceKm: 22.0,
-          elevationGainM: 570,
-          path: [
-            const LatLng(43.0096, -1.3195), // Roncesvalles
-            const LatLng(43.0050, -1.3300),
-            const LatLng(42.9950, -1.3400),
-            const LatLng(42.9800, -1.3500),
-            const LatLng(42.9600, -1.4000),
-            const LatLng(42.9519, -1.4950), // Zubiri
-          ],
-          estimatedTime: const Duration(hours: 6),
-          difficulty: 'Moderate',
-        ),
-        CaminoStage(
-          id: 'zubiri-pamplona',
-          name: 'Zubiri → Pamplona',
-          description: '카미노 프란세스의 주요 도시 팜플로나로 향하는 구간',
-          distanceKm: 20.5,
-          elevationGainM: 300,
-          path: [
-            const LatLng(42.9519, -1.4950), // Zubiri
-            const LatLng(42.9400, -1.5100),
-            const LatLng(42.9300, -1.5300),
-            const LatLng(42.9200, -1.5500),
-            const LatLng(42.9100, -1.6000),
-            const LatLng(42.8167, -1.6333), // Pamplona
-          ],
-          estimatedTime: const Duration(hours: 5, minutes: 30),
-          difficulty: 'Easy',
-        ),
-      ],
-    );
-  }
-
-  @override
-  Future<LatLng?> getCurrentLocation() async {
-    if (!await isLocationPermissionGranted()) {
-      await requestLocationPermission();
-    }
-
-    try {
-      final locationData = await _location.getLocation();
-      return LatLng(locationData.latitude!, locationData.longitude!);
+      // 카미노 전체 경로 로드
+      await _loadCompletePath();
     } catch (e) {
-      debugPrint('위치를 가져오는 중 오류 발생: $e');
-      // 오류 발생 시 기본 위치를 생장 피드 포르트로 설정
-      return const LatLng(43.1634, -1.2374); // Saint-Jean
+      debugPrint('위치 서비스 초기화 오류: $e');
+    }
+  }
+
+  /// 전체 카미노 경로 로드
+  Future<void> _loadCompletePath() async {
+    try {
+      debugPrint('카미노 전체 경로 로드 시작');
+      final stageService = StageService();
+      final gmapsPoints = stageService.getAllStagesPoints();
+      debugPrint('스테이지 포인트 로드 완료: ${gmapsPoints.length}개');
+
+      _completePath = [];
+      for (final point in gmapsPoints) {
+        _completePath.add(LatLng(point.latitude, point.longitude));
+      }
+
+      debugPrint('카미노 전체 경로 로드 완료: ${_completePath.length}개 포인트');
+    } catch (e) {
+      debugPrint('카미노 경로 로드 오류: $e');
+      _completePath = []; // 오류 발생 시 빈 리스트로 초기화
     }
   }
 
   @override
   Stream<LatLng> getLocationUpdates() {
-    if (_locationController == null) {
-      _locationController = StreamController<LatLng>.broadcast();
-
-      _setupLocationUpdates();
-    }
-
-    return _locationController!.stream;
+    return _locationStreamController.stream;
   }
 
-  void _setupLocationUpdates() async {
-    if (!await isLocationPermissionGranted()) {
-      await requestLocationPermission();
+  @override
+  Future<bool> isOffRoute(LatLng location, double thresholdMeters) async {
+    // 향후 구현 예정: 경로 이탈 감지 기능
+    // 현재 버전에서는 항상 경로 내에 있는 것으로 간주
+
+    debugPrint('경로 이탈 감지 기능은 향후 업데이트에서 구현 예정입니다.');
+    return false;
+
+    /* 향후 구현 예정 코드:
+    if (_completePath.isEmpty) {
+      await _loadCompletePath();
+      if (_completePath.isEmpty) return false;
     }
 
-    _location.changeSettings(
-      accuracy: LocationAccuracy.high,
-      interval: 3000, // 3초마다 위치 업데이트
-      distanceFilter: 5, // 5미터 이상 움직였을 때만 업데이트
-    );
+    double minDistance = double.infinity;
+    for (final pathPoint in _completePath) {
+      final distance = MapUtils.calculateDistanceInMeters(
+        location,
+        pathPoint,
+      );
 
-    _location.onLocationChanged.listen((locationData) {
-      if (locationData.latitude != null && locationData.longitude != null) {
-        _locationController?.add(
-          LatLng(locationData.latitude!, locationData.longitude!),
-        );
+      if (distance < minDistance) {
+        minDistance = distance;
       }
-    });
+
+      // 임계값보다 가까운 점을 발견하면 경로 이탈이 아님
+      if (distance <= thresholdMeters) {
+        return false;
+      }
+    }
+
+    // 모든 점과의 거리가 임계값보다 크면 경로 이탈
+    debugPrint('경로 이탈 감지: 최소 거리 ${minDistance}m (임계값: ${thresholdMeters}m)');
+    return true;
+    */
+  }
+
+  @override
+  Future<CaminoStage?> getCurrentStage() async {
+    final currentLocation = await getCurrentLocation();
+    if (currentLocation == null) return null;
+
+    final modelStages = await _stageService.getAllStages();
+    if (modelStages.isEmpty) return null;
+
+    CaminoStage? closestStage;
+    double minDistance = double.infinity;
+
+    // 각 스테이지를 도메인 모델로 변환하고 가장 가까운 스테이지 찾기
+    for (final modelStage in modelStages) {
+      // 데이터 모델을 도메인 모델로 변환
+      final stage = StageConverter.convertToMapStage(modelStage);
+
+      if (stage.path.isEmpty) continue;
+
+      // 현재 위치와 스테이지 경로 사이의 최소 거리 계산
+      double stageMinDistance = double.infinity;
+      for (final pathPoint in stage.path) {
+        final distance = MapUtils.calculateDistanceInMeters(
+          currentLocation,
+          pathPoint,
+        );
+
+        if (distance < stageMinDistance) {
+          stageMinDistance = distance;
+        }
+      }
+
+      // 가장 가까운 스테이지 갱신
+      if (stageMinDistance < minDistance) {
+        minDistance = stageMinDistance;
+        closestStage = stage;
+      }
+    }
+
+    return closestStage;
+  }
+
+  @override
+  Future<LatLng> getNearestPointOnRoute(LatLng currentLocation) async {
+    if (_completePath.isEmpty) {
+      await _loadCompletePath();
+      if (_completePath.isEmpty) return currentLocation;
+    }
+
+    double minDistance = double.infinity;
+    LatLng nearestPoint = currentLocation;
+
+    for (final pathPoint in _completePath) {
+      final distance = MapUtils.calculateDistanceInMeters(
+        currentLocation,
+        pathPoint,
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestPoint = pathPoint;
+      }
+    }
+
+    return nearestPoint;
+  }
+
+  @override
+  Future<bool> isWithinCaminoRoute(
+      LatLng location, double thresholdMeters) async {
+    // 향후 구현 예정: 경로 내 위치 확인 기능
+    // 현재 버전에서는 항상 경로 내에 있는 것으로 간주
+    return true;
+  }
+
+  @override
+  Future<LatLng?> getCurrentLocation() async {
+    try {
+      final locationData = await _location.getLocation();
+      if (locationData.latitude != null && locationData.longitude != null) {
+        return LatLng(locationData.latitude!, locationData.longitude!);
+      }
+    } catch (e) {
+      debugPrint('현재 위치 가져오기 오류: $e');
+    }
+    return null;
   }
 
   @override
   Future<bool> isLocationPermissionGranted() async {
-    var permissionStatus = await _location.hasPermission();
+    PermissionStatus permissionStatus = await _location.hasPermission();
     return permissionStatus == PermissionStatus.granted;
   }
 
   @override
   Future<bool> requestLocationPermission() async {
-    var permissionStatus = await _location.requestPermission();
+    PermissionStatus permissionStatus = await _location.requestPermission();
     return permissionStatus == PermissionStatus.granted;
   }
 
   @override
   Future<CaminoRoute> getCaminoRoute() async {
-    await _initialize();
-    return _caminoRoute;
-  }
+    try {
+      debugPrint('getCaminoRoute 시작');
 
-  @override
-  Future<CaminoStage?> getCurrentStage() async {
-    await _initialize();
+      if (_caminoRoute != null) {
+        debugPrint('캐시된 카미노 경로 반환');
+        return _caminoRoute!;
+      }
 
-    // 현재 위치 확인
-    LatLng? currentLocation = await getCurrentLocation();
+      debugPrint('모든 스테이지 로드 시작');
+      // 모든 스테이지 가져오기
+      final stages = await _stageService.getAllStages();
+      debugPrint('스테이지 로드 완료: ${stages.length}개');
 
-    if (currentLocation == null) {
-      // 위치를 확인할 수 없는 경우 첫 번째 스테이지 반환
-      return _caminoRoute.stages.first;
-    }
-
-    // 가장 가까운 스테이지 찾기
-    CaminoStage? closestStage;
-    double minDistance = double.infinity;
-
-    for (var stage in _caminoRoute.stages) {
-      for (var point in stage.path) {
-        double distance = _calculateDistance(currentLocation, point);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestStage = stage;
+      debugPrint('도메인 모델로 변환 시작');
+      // 도메인 모델로 변환
+      final List<CaminoStage> mappedStages = [];
+      for (int i = 0; i < stages.length; i++) {
+        debugPrint('스테이지 변환 중: ${i + 1}/${stages.length} (${stages[i].id})');
+        try {
+          final mappedStage = StageConverter.convertToMapStage(stages[i]);
+          mappedStages.add(mappedStage);
+        } catch (e) {
+          debugPrint('스테이지 변환 오류 (${stages[i].id}): $e');
+          // 오류가 있는 스테이지는 건너뜀
         }
       }
-    }
+      debugPrint('도메인 모델 변환 완료: ${mappedStages.length}개');
 
-    // 가장 가까운 스테이지 또는 없으면 첫번째 스테이지 반환
-    return closestStage ?? _caminoRoute.stages.first;
+      debugPrint('카미노 경로 생성');
+      // 카미노 경로 생성
+      _caminoRoute = CaminoRoute(
+        id: 'camino_frances',
+        name: '카미노 프란세스',
+        description: '생장 피에드포르부터 산티아고 데 콤포스텔라까지의 프랑스 길',
+        stages: mappedStages,
+      );
+      debugPrint('카미노 경로 생성 완료');
+
+      return _caminoRoute!;
+    } catch (e, stackTrace) {
+      debugPrint('카미노 경로 로드 오류: $e');
+      debugPrint('스택 트레이스: $stackTrace');
+
+      // 기본 비어있는 경로 반환 (예외 전파 방지)
+      return CaminoRoute(
+        id: 'camino_frances_fallback',
+        name: '카미노 프란세스',
+        description: '데이터 로드 중 오류가 발생했습니다',
+        stages: [],
+      );
+    }
   }
 
   @override
@@ -576,117 +300,125 @@ class LocationRepositoryImpl implements LocationRepository {
     double radiusKm,
     List<MarkerType> types,
   ) async {
-    // 실제로는 DB 쿼리나 API 호출로 가져옴
-    // 여기서는 간단한 구현을 위해 하드코딩된 마커 중 타입에 맞는 것만 반환
-    return _allMarkers.where((marker) => types.contains(marker.type)).toList();
-  }
+    try {
+      // TODO: 실제 POI 데이터베이스나 API 연동 시 확장 필요
+      // 현재는 하드코딩된 데모 마커 반환
+      List<MapMarker> allMarkers = [
+        MapMarker(
+          id: 'alb001',
+          title: '알베르게 산 요선',
+          description: '순례자 전용 숙소, 10€/박',
+          position: LatLng(42.8781, -7.4107),
+          type: MarkerType.accommodation,
+        ),
+        MapMarker(
+          id: 'alb002',
+          title: '알베르게 두 카미노',
+          description: '순례자 전용 숙소, 12€/박',
+          position: LatLng(42.8755, -7.4198),
+          type: MarkerType.accommodation,
+        ),
+        MapMarker(
+          id: 'rest001',
+          title: 'Casa Pepe',
+          description: '현지 음식, 순례자 메뉴: 10€',
+          position: LatLng(42.8764, -7.4154),
+          type: MarkerType.restaurant,
+        ),
+        MapMarker(
+          id: 'pharm001',
+          title: 'Farmacia Santiago',
+          description: '09:00-20:00 영업',
+          position: LatLng(42.8792, -7.4135),
+          type: MarkerType.pharmacy,
+        ),
+        MapMarker(
+          id: 'wp001',
+          title: '산티아고 대성당',
+          description: '카미노 프란세스의 최종 목적지',
+          position: LatLng(42.8806, -8.5459),
+          type: MarkerType.landmark,
+        ),
+      ];
 
-  @override
-  Future<bool> isOffRoute(LatLng position, double thresholdMeters) async {
-    CaminoStage? currentStage = await getCurrentStage();
-    if (currentStage == null) return false;
+      // 현재 위치에서 설정된 반경 내에 있는 마커만 필터링
+      List<MapMarker> nearbyMarkers = allMarkers.where((marker) {
+        // 요청된 마커 타입인지 확인
+        if (!types.contains(marker.type)) {
+          return false;
+        }
 
-    // 현재 스테이지의 모든 경로 포인트에 대해 최소 거리 계산
-    double minDistance = double.infinity;
+        // 거리 계산
+        final distance = MapUtils.calculateDistance(
+          center.latitude,
+          center.longitude,
+          marker.position.latitude,
+          marker.position.longitude,
+        );
 
-    for (var point in currentStage.path) {
-      double distance = _calculateDistance(position, point);
-      if (distance < minDistance) {
-        minDistance = distance;
-      }
+        // 지정된 반경 내에 있는지 확인
+        return distance <= radiusKm;
+      }).toList();
+
+      return nearbyMarkers;
+    } catch (e) {
+      debugPrint('마커 로드 오류: $e');
+      return [];
     }
-
-    // 임계값(thresholdMeters)보다 최소 거리가 크면 경로 이탈로 간주
-    return minDistance > thresholdMeters;
-  }
-
-  // 두 위치 간의 대략적인 거리를 미터 단위로 계산 (Haversine 공식)
-  double _calculateDistance(LatLng pos1, LatLng pos2) {
-    const double earthRadius = 6371000; // 지구 반경 (미터)
-    double lat1Rad = pos1.latitude * (math.pi / 180);
-    double lat2Rad = pos2.latitude * (math.pi / 180);
-    double deltaLatRad = (pos2.latitude - pos1.latitude) * (math.pi / 180);
-    double deltaLngRad = (pos2.longitude - pos1.longitude) * (math.pi / 180);
-
-    double a =
-        math.sin(deltaLatRad / 2) * math.sin(deltaLatRad / 2) +
-        math.cos(lat1Rad) *
-            math.cos(lat2Rad) *
-            math.sin(deltaLngRad / 2) *
-            math.sin(deltaLngRad / 2);
-    double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-
-    return earthRadius * c;
   }
 
   @override
   Future<BitmapDescriptor> getMarkerIcon(MarkerType type) async {
-    try {
-      switch (type) {
-        case MarkerType.accommodation:
-          return BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueBlue,
-          );
-        case MarkerType.restaurant:
-          return BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange,
-          );
-        case MarkerType.pharmacy:
-          return BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueMagenta,
-          );
-        case MarkerType.landmark:
-          return BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueGreen,
-          );
-        case MarkerType.waypoint:
-          return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
-        case MarkerType.currentLocation:
-          return BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure,
-          );
-        default:
-          return BitmapDescriptor.defaultMarker;
-      }
-    } catch (e) {
-      debugPrint('마커 아이콘 생성 실패: $e');
-      // 실패 시 대체 방법으로 컬러 원형 마커 생성
-      return _createColoredCircleMarker(type);
+    if (_markerIcons.containsKey(type)) {
+      return _markerIcons[type]!;
     }
-  }
 
-  // 커스텀 컬러 마커 생성 (아이콘 로드 실패 시 대체용)
-  BitmapDescriptor _createColoredCircleMarker(MarkerType type) {
-    Color color;
+    // 마커 타입에 따라 다른 아이콘 설정
+    BitmapDescriptor icon;
     switch (type) {
       case MarkerType.accommodation:
-        color = Colors.blue;
+        icon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(),
+          'assets/icons/albergue_marker.png',
+        );
         break;
       case MarkerType.restaurant:
-        color = Colors.orange;
-        break;
-      case MarkerType.pharmacy:
-        color = Colors.purple;
-        break;
-      case MarkerType.landmark:
-        color = Colors.green;
+        icon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(),
+          'assets/icons/restaurant_marker.png',
+        );
         break;
       case MarkerType.waypoint:
-        color = Colors.red;
+        icon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(),
+          'assets/icons/waypoint_marker.png',
+        );
+        break;
+      case MarkerType.landmark:
+        icon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(),
+          'assets/icons/viewpoint_marker.png',
+        );
+        break;
+      case MarkerType.pharmacy:
+        icon = await BitmapDescriptor.fromAssetImage(
+          const ImageConfiguration(),
+          'assets/icons/pharmacy_marker.png',
+        );
         break;
       case MarkerType.currentLocation:
-        color = Colors.blue.shade400;
-        break;
+        // 현재 위치는 파란색 원 아이콘 사용
+        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
       default:
-        color = Colors.grey;
+        icon = BitmapDescriptor.defaultMarker;
     }
 
-    return BitmapDescriptor.defaultMarkerWithHue(HSVColor.fromColor(color).hue);
+    _markerIcons[type] = icon;
+    return icon;
   }
 
-  // 리소스 정리
+  /// 리소스 해제
   void dispose() {
-    _locationController?.close();
-    _locationController = null;
+    _locationStreamController.close();
   }
 }

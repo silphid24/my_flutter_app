@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:my_flutter_app/models/track.dart';
 import 'package:my_flutter_app/services/gpx_service.dart';
-import 'package:my_flutter_app/presentation/features/home/widgets/bottom_nav_bar.dart';
+import 'package:my_flutter_app/presentation/features/shared/layout/app_scaffold.dart';
 
 /// Track Map Screen
 ///
@@ -61,13 +61,14 @@ class _TrackMapScreenState extends ConsumerState<TrackMapScreen> {
       setState(() {
         _isLoading = false;
       });
-      print('Error loading track: $e');
+      debugPrint('Error loading track: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
+      currentIndex: 1,
       appBar: AppBar(
         title: Text(_track?.name ?? 'Pilgrim Route Map'),
         actions: [
@@ -79,7 +80,6 @@ class _TrackMapScreenState extends ConsumerState<TrackMapScreen> {
           : _track == null
               ? const Center(child: Text('Track information not found.'))
               : _buildMap(),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
 

@@ -50,9 +50,15 @@ Map<String, dynamic> _$$PoiImplToJson(_$PoiImpl instance) => <String, dynamic>{
     };
 
 const _$PoiTypeEnumMap = {
-  PoiType.accommodation: 0,
-  PoiType.restaurant: 1,
-  PoiType.pharmacy: 2,
-  PoiType.landmark: 3,
-  PoiType.service: 4,
+  PoiType.albergue: 'albergue',
+  PoiType.hotel: 'hotel',
+  PoiType.restaurant: 'restaurant',
+  PoiType.bar: 'bar',
+  PoiType.fountain: 'fountain',
+  PoiType.church: 'church',
+  PoiType.monument: 'monument',
+  PoiType.viewpoint: 'viewpoint',
+  PoiType.medical: 'medical',
+  PoiType.shop: 'shop',
+  PoiType.other: 'other',
 };

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:my_flutter_app/screens/info/info_screen.dart';
-import 'package:my_flutter_app/presentation/features/home/widgets/bottom_nav_bar.dart';
+import 'package:my_flutter_app/presentation/features/info/info_screen_content.dart';
+import 'package:my_flutter_app/presentation/features/shared/layout/app_scaffold.dart';
 
 /// 정보 스크린 컨테이너
 ///
 /// 정보 화면의 메인 컨테이너입니다.
-/// 기존 InfoScreen을 래핑하고 하단 네비게이션 바를 제공합니다.
+/// InfoScreenContent를 래핑하고 AppScaffold를 사용해 일관된 레이아웃을 제공합니다.
 class InfoScreenContainer extends HookConsumerWidget {
   const InfoScreenContainer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Scaffold(
-      body: InfoScreen(),
-      bottomNavigationBar: BottomNavBar(currentIndex: 3),
+    return const AppScaffold(
+      currentIndex: 3,
+      body: InfoScreenContent(),
     );
   }
 }

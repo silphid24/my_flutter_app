@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:my_flutter_app/models/route_model.dart';
-import 'package:my_flutter_app/presentation/features/home/widgets/bottom_nav_bar.dart';
+import 'package:my_flutter_app/presentation/features/shared/layout/app_scaffold.dart';
 
 /// Route Detail Screen
 ///
@@ -13,7 +13,8 @@ class RouteDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
+    return AppScaffold(
+      currentIndex: 0,
       appBar: AppBar(title: Text(route.title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -126,7 +127,6 @@ class RouteDetailScreen extends ConsumerWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 

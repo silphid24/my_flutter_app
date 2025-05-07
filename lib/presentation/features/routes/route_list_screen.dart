@@ -3,7 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:my_flutter_app/models/route_model.dart';
 import 'package:my_flutter_app/services/route_service.dart';
 import 'package:my_flutter_app/presentation/features/routes/route_detail_screen.dart';
-import 'package:my_flutter_app/presentation/features/home/widgets/bottom_nav_bar.dart';
+import 'package:my_flutter_app/presentation/features/shared/layout/app_scaffold.dart';
 
 /// Route List Screen
 ///
@@ -71,13 +71,12 @@ class _RouteListScreenState extends ConsumerState<RouteListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pilgrim Routes'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadRoutes),
-        ],
-      ),
+    return AppScaffold(
+      currentIndex: 0,
+      title: 'Pilgrim Routes',
+      actions: [
+        IconButton(icon: const Icon(Icons.refresh), onPressed: _loadRoutes),
+      ],
       body: Column(
         children: [
           Padding(
@@ -175,7 +174,6 @@ class _RouteListScreenState extends ConsumerState<RouteListScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 

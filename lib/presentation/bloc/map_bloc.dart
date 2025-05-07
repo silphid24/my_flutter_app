@@ -211,10 +211,21 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     emit(MapLoading());
 
     try {
+      debugPrint('MapBloc: 맵 로드 시작');
+
       // 카미노 경로 로드
+      debugPrint('MapBloc: 카미노 경로 로드 시작');
       final caminoRoute = await _locationRepository.getCaminoRoute();
+      debugPrint('MapBloc: 카미노 경로 로드 완료');
+
+      debugPrint('MapBloc: 현재 스테이지 로드 시작');
       final currentStage = await _locationRepository.getCurrentStage();
+      debugPrint('MapBloc: 현재 스테이지 로드 완료: ${currentStage?.name ?? "없음"}');
+
+      debugPrint('MapBloc: 현재 위치 로드 시작');
       final currentLocation = await _locationRepository.getCurrentLocation();
+      debugPrint(
+          'MapBloc: 현재 위치 로드 완료: ${currentLocation?.latitude}, ${currentLocation?.longitude}');
 
       // 맵에 표시할 마커와 경로 생성
       Map<MarkerType, bool> visibleMarkerTypes = {
@@ -224,15 +235,23 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         MarkerType.landmark: true,
       };
 
+      debugPrint('MapBloc: 마커 생성 시작');
       Set<Marker> markers = await _createMarkers(
         currentLocation,
         visibleMarkerTypes,
       );
+      debugPrint('MapBloc: 마커 생성 완료: ${markers.length}개');
+
+      debugPrint('MapBloc: 폴리라인 생성 시작');
       Set<Polyline> polylines = await _createRoutePolylines(caminoRoute);
+      debugPrint('MapBloc: 폴리라인 생성 완료: ${polylines.length}개');
 
       // 위치 업데이트 스트림 구독
+      debugPrint('MapBloc: 위치 업데이트 스트림 구독 시작');
       _subscribeToLocationUpdates();
+      debugPrint('MapBloc: 위치 업데이트 스트림 구독 완료');
 
+      debugPrint('MapBloc: MapLoaded 상태 방출');
       emit(
         MapLoaded(
           caminoRoute: caminoRoute,
@@ -244,7 +263,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           visibleMarkerTypes: visibleMarkerTypes,
         ),
       );
-    } catch (e) {
+      debugPrint('MapBloc: MapLoaded 상태 방출 완료');
+    } catch (e, stackTrace) {
+      debugPrint('MapBloc 오류: $e');
+      debugPrint('스택 트레이스: $stackTrace');
       emit(MapError('지도 정보를 로드하는 중 오류가 발생했습니다: $e'));
     }
   }
@@ -336,19 +358,26 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     if (state is MapLoaded) {
       final currentState = state as MapLoaded;
 
-      // 경로 이탈 감지 모드가 활성화된 경우에만 처리
-      if (currentState.deviationModeEnabled &&
-          currentState.pilgrimModeEnabled) {
-        bool isOffRoute = await _locationRepository.isOffRoute(
-          event.location,
-          100, // 임계값: 100m
-        );
+      // 향후 구현 예정: 경로 이탈 감지 기능
+      // 현재는 비활성화됨
+      //
+      // if (currentState.deviationModeEnabled &&
+      //     currentState.pilgrimModeEnabled) {
+      //   bool isOffRoute = await _locationRepository.isOffRoute(
+      //     event.location,
+      //     200, // 임계값: 200m
+      //   );
+      //
+      //   if (isOffRoute != currentState.isOffRoute) {
+      //     emit(currentState.copyWith(isOffRoute: isOffRoute));
+      //   }
+      // } else if (currentState.isOffRoute) {
+      //   // 모드가 비활성화된 경우 이탈 경고 끄기
+      //   emit(currentState.copyWith(isOffRoute: false));
+      // }
 
-        if (isOffRoute != currentState.isOffRoute) {
-          emit(currentState.copyWith(isOffRoute: isOffRoute));
-        }
-      } else if (currentState.isOffRoute) {
-        // 모드가 비활성화된 경우 이탈 경고 끄기
+      // 경로 이탈 상태를 항상 false로 설정
+      if (currentState.isOffRoute) {
         emit(currentState.copyWith(isOffRoute: false));
       }
     }

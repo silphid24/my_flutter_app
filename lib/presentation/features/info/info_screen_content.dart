@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_app/screens/home_screen.dart';
-import 'package:my_flutter_app/screens/stages_map_screen.dart';
-import 'package:my_flutter_app/screens/community/community_screen.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class InfoScreen extends StatefulWidget {
-  const InfoScreen({super.key});
+/// 카미노 정보 스크린 콘텐츠
+///
+/// 카미노 데 산티아고 순례 경로에 대한 다양한 정보를 제공하는 화면입니다.
+class InfoScreenContent extends StatefulWidget {
+  const InfoScreenContent({super.key});
 
   @override
-  State<InfoScreen> createState() => _InfoScreenState();
+  State<InfoScreenContent> createState() => _InfoScreenContentState();
 }
 
-class _InfoScreenState extends State<InfoScreen> {
+class _InfoScreenContentState extends State<InfoScreenContent> {
   final List<InfoCategory> _categories = [
     InfoCategory(
       title: 'Camino Frances Introduction',
@@ -198,9 +197,8 @@ class _InfoScreenState extends State<InfoScreen> {
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
-                            color: isSelected
-                                ? Colors.blue.shade800
-                                : Colors.black87,
+                            color:
+                                isSelected ? Colors.blue : Colors.grey.shade700,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -214,34 +212,28 @@ class _InfoScreenState extends State<InfoScreen> {
           ),
 
           // 선택된 카테고리 설명
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            color: Colors.blue.shade50,
             child: Text(
-              _selectedCategoryIndex < _categories.length
-                  ? _categories[_selectedCategoryIndex].description
-                  : '',
+              _categories[_selectedCategoryIndex].description,
               style: const TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
-                color: Colors.black54,
               ),
             ),
           ),
 
           // 선택된 카테고리의 정보 항목 목록
           Expanded(
-            child: _selectedCategoryIndex < _categories.length
-                ? ListView.builder(
-                    itemCount: _categories[_selectedCategoryIndex].items.length,
-                    itemBuilder: (context, index) {
-                      final item =
-                          _categories[_selectedCategoryIndex].items[index];
-                      return _buildInfoCard(item);
-                    },
-                  )
-                : const Center(
-                    child: Text('Please select a category'),
-                  ),
+            child: ListView.builder(
+              itemCount: _categories[_selectedCategoryIndex].items.length,
+              itemBuilder: (context, index) {
+                final item = _categories[_selectedCategoryIndex].items[index];
+                return _buildInfoCard(item);
+              },
+            ),
           ),
         ],
       ),
@@ -251,54 +243,30 @@ class _InfoScreenState extends State<InfoScreen> {
   Widget _buildInfoCard(InfoItem item) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (item.imageUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Container(
-                height: 150,
-                width: double.infinity,
-                child: CachedNetworkImage(
-                  imageUrl: item.imageUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Center(
-                    child: const CircularProgressIndicator(),
-                  ),
-                  errorWidget: (context, url, error) {
-                    return Container(
-                      height: 150,
-                      width: double.infinity,
-                      color: Colors.grey.shade300,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.image_not_supported,
-                            size: 40,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Failed to load image',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+          // 이미지
+          SizedBox(
+            height: 180,
+            width: double.infinity,
+            child: CachedNetworkImage(
+              imageUrl: item.imageUrl,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              errorWidget: (context, url, error) => const Center(
+                child: Icon(Icons.error),
               ),
             ),
+          ),
+
+          // 제목과 내용
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -319,12 +287,54 @@ class _InfoScreenState extends State<InfoScreen> {
               ],
             ),
           ),
+
+          // 버튼 영역
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content:
+                              Text('Bookmark feature is under development')),
+                    );
+                  },
+                  child: const Row(
+                    children: [
+                      Icon(Icons.bookmark_border),
+                      SizedBox(width: 4),
+                      Text('Bookmark'),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Share feature is under development')),
+                    );
+                  },
+                  child: const Row(
+                    children: [
+                      Icon(Icons.share),
+                      SizedBox(width: 4),
+                      Text('Share'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
+/// 정보 카테고리 데이터 클래스
 class InfoCategory {
   final String title;
   final IconData icon;
@@ -339,6 +349,7 @@ class InfoCategory {
   });
 }
 
+/// 정보 아이템 데이터 클래스
 class InfoItem {
   final String title;
   final String content;

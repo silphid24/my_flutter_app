@@ -13,7 +13,8 @@ Key Principles
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
 - Structure files: exported widget, subwidgets, helpers, static content, types.
 - Do not modify any parts of the app unless absolutely necessary. Any changes should be requested from the developer and approval must be obtained before proceeding.
-- Always execute the tests on the Android app.
+- Follow the Single Responsibility Principle (SRP) when developing in Flutter. Each class, method, or widget should have only one responsibility, making the code easier to maintain, test, and extend. Keep your code clean and modular by ensuring that each component handles a single task or feature.
+- Always execute the tests on the Android app or simulator.
 
 Dart/Flutter
 - Use const constructors for immutable widgets.

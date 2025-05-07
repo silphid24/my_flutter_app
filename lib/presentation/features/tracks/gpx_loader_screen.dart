@@ -3,7 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:my_flutter_app/models/track.dart';
 import 'package:my_flutter_app/services/gpx_service.dart';
 import 'package:my_flutter_app/presentation/features/tracks/track_map_screen.dart';
-import 'package:my_flutter_app/presentation/features/home/widgets/bottom_nav_bar.dart';
+import 'package:my_flutter_app/presentation/features/shared/layout/app_scaffold.dart';
 
 /// GPX Loader Screen
 ///
@@ -59,13 +59,12 @@ class _GpxLoaderScreenState extends ConsumerState<GpxLoaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Camino de Santiago Tracks'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadGpxFiles),
-        ],
-      ),
+    return AppScaffold(
+      currentIndex: 1,
+      title: 'Camino de Santiago Tracks',
+      actions: [
+        IconButton(icon: const Icon(Icons.refresh), onPressed: _loadGpxFiles),
+      ],
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _tracks.isEmpty
@@ -105,7 +104,6 @@ class _GpxLoaderScreenState extends ConsumerState<GpxLoaderScreen> {
                     );
                   },
                 ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
 }

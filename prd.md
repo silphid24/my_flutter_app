@@ -12,7 +12,7 @@
 Based on firsthand experience walking the Camino de Santiago, this mobile app will:
 
 - Default language is English. Services will provide spanish, korean, germany, japanese, Chinese.
-- Seamlessly integrate GPS‑based navigation to show pilgrims exactly where they are on the trail and alert them if they deviate.
+- Seamlessly integrate GPS‑based navigation to show pilgrims exactly where they are on the trail.
 - Curate only the most relevant nearby infrastructure—such as accommodations, restaurants, pharmacies, and points of interest—displaying up to two suggestions per category.
 - Offer data‑driven route recommendations based on popularity and logistical convenience.
 - Foster community engagement through built‑in forums for sharing tips, arranging meetups, and reporting conditions.
@@ -43,16 +43,14 @@ By addressing information overload, lack of real‑time alerts, and poor UX in c
 ### 2. Home Screen
 1. **GPS‑Based Route Overlay:**  
    - Real‑time position on the Camino map  
-   - Automatic rerouting if off‑path  
 2. **Top‑2 Infrastructure Suggestions:**  
    - Nearby accommodations, bars, restaurants, pharmacies, landmarks  
    - Maximum two suggestions per category  
 3. **Recommended Journeys:**  
-   - Data‑driven stage suggestions (e.g., Day 1: St. Jean → Roncesvalles)
+   - Data‑driven stage suggestions (e.g., Day 1: St. Jean → Roncesvalles)
 
 ### 3. Map View
 - **Zoomable, Detailed Map:** Official Camino routes + POIs  
-- **Off‑Route Alerts:** Visual cues when user strays beyond a set radius  
 - **Layer Controls:** Toggle categories on/off  
 
 ### 4. Community Forum
@@ -67,6 +65,7 @@ By addressing information overload, lack of real‑time alerts, and poor UX in c
 ---
 
 ## Suggested Additional Features
+- **Off-Route Alerts:** Visual cues when user strays beyond a set radius with automatic rerouting
 - **Offline Map Caching:** Pre‑download stages or entire route  
 - **Multi‑Language Support:** English, Spanish, Portuguese, French, Korean  
 - **AI‑Driven Chat Assistant:** Answer FAQs, recommend services  
@@ -87,16 +86,16 @@ By addressing information overload, lack of real‑time alerts, and poor UX in c
 | **Age**              | 28                                                   |
 | **Occupation**       | Marketing Specialist                                 |
 | **Experience Level** | First‑time pilgrim                                   |
-| **Goals**            | Complete Camino Frances in 30 days; connect with others |
+| **Goals**            | Complete Camino Frances in 30 days; connect with others |
 | **Pain Points**      | Getting lost; finding open accommodations; language barriers |
 
 **Usage Scenarios**  
 1. **Morning Planning:**  
    - Checks recommended stage, previews weather, downloads offline map.  
 2. **On Trail Navigation:**  
-   - Receives off‑route alert, reorients map, resumes path.  
+   - Uses map to follow the path, checks current location.  
 3. **Meal Break:**  
-   - Taps “Lunch,” sees two nearby restaurants with photos and reviews, chooses one.  
+   - Taps "Lunch," sees two nearby restaurants with photos and reviews, chooses one.  
 4. **Community Engagement:**  
    - Posts request for rain gear, receives helpful replies.  
 5. **Evening Reflection:**  

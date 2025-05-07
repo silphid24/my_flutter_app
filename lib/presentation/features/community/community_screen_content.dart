@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_app/screens/home_screen.dart';
-import 'package:my_flutter_app/screens/stages_map_screen.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class CommunityScreen extends StatefulWidget {
-  const CommunityScreen({super.key});
+/// 커뮤니티 스크린 콘텐츠
+///
+/// 카미노 드 산티아고 사용자들의 커뮤니티 게시글을 표시하는 화면입니다.
+class CommunityScreenContent extends StatefulWidget {
+  const CommunityScreenContent({super.key});
 
   @override
-  State<CommunityScreen> createState() => _CommunityScreenState();
+  State<CommunityScreenContent> createState() => _CommunityScreenContentState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> {
+class _CommunityScreenContentState extends State<CommunityScreenContent> {
   final List<PostItem> _posts = [
     PostItem(
       username: 'pilgrim_john',
@@ -145,8 +145,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
               child: CachedNetworkImage(
                 imageUrl: post.imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Center(
-                  child: const CircularProgressIndicator(),
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(),
                 ),
                 errorWidget: (context, url, error) {
                   return Center(
@@ -195,12 +195,48 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ],
             ),
           ),
+          // 댓글 입력 필드
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 16,
+                  child: Icon(Icons.person, size: 20),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade200,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
+/// 게시물 데이터 클래스
 class PostItem {
   final String username;
   final String location;

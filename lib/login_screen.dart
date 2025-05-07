@@ -6,6 +6,7 @@ import 'package:my_flutter_app/presentation/bloc/auth_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_flutter_app/data/repositories/auth_repository_impl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

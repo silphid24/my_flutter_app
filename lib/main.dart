@@ -9,6 +9,7 @@ import 'package:my_flutter_app/presentation/bloc/map_bloc.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:my_flutter_app/services/gpx_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:my_flutter_app/config/firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_flutter_app/presentation/app.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -87,7 +88,9 @@ Future<void> main() async {
 
   // Firebase 초기화
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     print('Firebase 초기화 완료');
   } catch (e) {
     print('Firebase 초기화 오류: $e');
