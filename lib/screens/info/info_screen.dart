@@ -15,110 +15,114 @@ class InfoScreen extends StatefulWidget {
 class _InfoScreenState extends State<InfoScreen> {
   final List<InfoCategory> _categories = [
     InfoCategory(
-      title: '카미노 프랑세스 소개',
+      title: 'Camino Frances Introduction',
       icon: Icons.hiking,
-      description: '프랑스 길(Camino Francés)은 가장 인기있는 카미노 데 산티아고 경로입니다.',
+      description:
+          'The French Way (Camino Francés) is the most popular Camino de Santiago route.',
       items: [
         InfoItem(
-          title: '카미노 프랑세스란?',
+          title: 'What is Camino Frances?',
           content:
-              '카미노 프랑세스는 프랑스에서 시작하여 스페인 북부를 가로질러 산티아고 데 콤포스텔라까지 이어지는 약 800km의 순례길입니다. 매년 수만 명의 순례자들이 다양한 이유로 이 길을 걷습니다.',
+              'The Camino Frances is an approximately 800km pilgrimage route starting in France and crossing northern Spain to Santiago de Compostela. Each year, tens of thousands of pilgrims walk this route for various reasons.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?camino,pilgrimage',
         ),
         InfoItem(
-          title: '역사',
+          title: 'History',
           content:
-              '이 순례길의 역사는 9세기로 거슬러 올라가며, 성 야고보의 무덤이 발견된 이후 크리스천들의 중요한 순례지가 되었습니다. 중세 시대에는 예루살렘, 로마와 함께 가장 중요한 크리스천 순례지 중 하나였습니다.',
+              'The history of this pilgrimage route dates back to the 9th century with the discovery of the tomb of St. James, and it became an important Christian pilgrimage site. In the Middle Ages, it was one of the most important Christian pilgrimage destinations along with Jerusalem and Rome.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?history,medieval',
         ),
         InfoItem(
-          title: '주요 도시',
+          title: 'Major Cities',
           content:
-              '생 장 피에 드 포르, 팜플로나, 로그로뇨, 부르고스, 레온, 폰페라다, 산티아고 데 콤포스텔라 등 역사적인 도시들을 통과합니다.',
+              'The route passes through historic cities such as Saint-Jean-Pied-de-Port, Pamplona, Logroño, Burgos, León, Ponferrada, and Santiago de Compostela.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?santiago,spain',
         ),
       ],
     ),
     InfoCategory(
-      title: '순례자 여권 (Credential)',
+      title: 'Pilgrim Credential',
       icon: Icons.bookmark,
-      description: '순례자 여권은 카미노를 걷는 동안 공식 인증을 받기 위한 필수 문서입니다.',
+      description:
+          'The pilgrim passport is an essential document for receiving official certification during your Camino journey.',
       items: [
         InfoItem(
-          title: '크레덴셜이란?',
+          title: 'What is a Credential?',
           content:
-              '순례자 여권(Credencial del Peregrino)은 순례자의 신분을 증명하고 순례 여정을 기록하는 공식 문서입니다. 이를 통해 알베르게(순례자 숙소)에 묵을 수 있는 자격을 얻습니다.',
+              'The pilgrim passport (Credencial del Peregrino) is an official document that proves your identity as a pilgrim and records your journey. It qualifies you to stay in albergues (pilgrim hostels).',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?passport,travel',
         ),
         InfoItem(
-          title: '스탬프 수집',
+          title: 'Collecting Stamps',
           content:
-              '순례 중 방문하는 알베르게, 성당, 카페 등에서 스탬프를 모을 수 있습니다. 산티아고에 도착하면 최소 100km(도보) 또는 200km(자전거)의 여정을 증명하는 스탬프를 보여주고 콤포스텔라(Compostela)를 발급받을 수 있습니다.',
+              'You can collect stamps from albergues, churches, cafés, and other places you visit during your pilgrimage. Upon arrival in Santiago, you can show your stamps proving at least 100km (on foot) or 200km (by bicycle) of the journey to receive a Compostela certificate.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?stamp,collection',
         ),
       ],
     ),
     InfoCategory(
-      title: '알베르게 정보',
+      title: 'Albergue Information',
       icon: Icons.hotel,
-      description: '알베르게는 순례자들을 위한 특별한 숙소 시스템입니다.',
+      description: 'Albergues are special accommodation systems for pilgrims.',
       items: [
         InfoItem(
-          title: '알베르게 종류',
+          title: 'Types of Albergues',
           content:
-              '공립(Municipal): 가장 저렴하지만 기본적인 시설을 제공합니다.\n사립(Private): 조금 더 높은 가격이지만 더 좋은 시설과 서비스를 제공합니다.\n기부제(Donativo): 기부금으로 운영되는 숙소입니다.\n교회/수도원(Parroquial): 교회나 수도원에서 운영하는 숙소입니다.',
+              'Municipal: The most affordable but offering basic facilities.\nPrivate: Slightly more expensive but providing better facilities and services.\nDonativo: Accommodation run on donations.\nParochial: Accommodation operated by churches or monasteries.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?hostel,accommodation',
         ),
         InfoItem(
-          title: '이용 방법',
+          title: 'How to Use',
           content:
-              '대부분의 알베르게는 선착순이며, 오후 1-2시부터 체크인이 가능합니다. 순례자 여권을 보여주고 요금을 지불하면 침대가 배정됩니다. 일반적으로 1박만 가능하며, 다음날 아침에는 8-9시까지 퇴실해야 합니다.',
+              'Most albergues are first-come, first-served, with check-in available from 1-2 pm. Show your pilgrim passport and pay the fee to be assigned a bed. Generally, you can only stay for one night and must check out by 8-9 am the next morning.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?hostel,bedroom',
         ),
       ],
     ),
     InfoCategory(
-      title: '준비물과 장비',
+      title: 'Gear and Equipment',
       icon: Icons.backpack,
-      description: '가볍게 가는 것이 중요합니다. 배낭 무게는 체중의 10%를 넘지 않는 것이 좋습니다.',
+      description:
+          'Traveling light is important. Your backpack weight should not exceed 10% of your body weight.',
       items: [
         InfoItem(
-          title: '필수 장비',
+          title: 'Essential Equipment',
           content:
-              '편안한 하이킹 신발 또는 트레일 러닝화, 가벼운 배낭(30-40L), 날씨에 적합한 의류(방수 자켓, 퀵드라이 셔츠, 하이킹 바지 등), 침낭, 세면도구, 기본 응급 처치 키트, 물병, 선크림, 모자 등.',
+              'Comfortable hiking shoes or trail running shoes, lightweight backpack (30-40L), weather-appropriate clothing (waterproof jacket, quick-dry shirts, hiking pants, etc.), sleeping bag, toiletries, basic first aid kit, water bottle, sunscreen, hat, etc.',
           imageUrl: 'https://source.unsplash.com/random/800x600/?hiking,gear',
         ),
         InfoItem(
-          title: '추천 앱',
+          title: 'Recommended Apps',
           content:
-              'Camino Ninja, Buen Camino, Wise Pilgrim 등의 앱은 경로, 알베르게 정보, 거리 계산 등 유용한 기능을 제공합니다.',
+              'Apps like Camino Ninja, Buen Camino, and Wise Pilgrim provide useful features such as route information, albergue details, distance calculations, etc.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?smartphone,app',
         ),
       ],
     ),
     InfoCategory(
-      title: '건강과 안전',
+      title: 'Health and Safety',
       icon: Icons.healing,
-      description: '긴 여정 동안 건강을 유지하는 것이 중요합니다.',
+      description:
+          'Maintaining your health during the long journey is important.',
       items: [
         InfoItem(
-          title: '물집 관리',
+          title: 'Blister Management',
           content:
-              '물집은 가장 흔한 문제입니다. 예방을 위해 편안한 신발과 양질의 양말을 착용하세요. 물집이 생기면 소독하고 특수 물집 패치(Compeed 등)를 사용하세요.',
+              'Blisters are the most common problem. Wear comfortable shoes and quality socks to prevent them. If blisters do form, disinfect them and use special blister patches (like Compeed).',
           imageUrl: 'https://source.unsplash.com/random/800x600/?blister,foot',
         ),
         InfoItem(
-          title: '날씨 대비',
+          title: 'Weather Preparation',
           content:
-              '계절에 따라 날씨가 크게 달라질 수 있습니다. 더위, 추위, 비 등에 대비하여 적절한 의류를 준비하세요. 여름에는 아침 일찍 출발하여 한낮의 더위를 피하는 것이 좋습니다.',
+              'Weather can vary greatly depending on the season. Prepare appropriate clothing for heat, cold, and rain. In summer, it\'s good to start early in the morning to avoid the midday heat.',
           imageUrl:
               'https://source.unsplash.com/random/800x600/?weather,hiking',
         ),
@@ -132,13 +136,14 @@ class _InfoScreenState extends State<InfoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('카미노 정보'),
+        title: const Text('Camino Information'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('검색 기능은 개발 중입니다.')),
+                const SnackBar(
+                    content: Text('Search feature is under development')),
               );
             },
           ),
@@ -208,19 +213,20 @@ class _InfoScreenState extends State<InfoScreen> {
             ),
           ),
 
-          // 카테고리 설명
-          if (_selectedCategoryIndex < _categories.length)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                _categories[_selectedCategoryIndex].description,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.black54,
-                ),
+          // 선택된 카테고리 설명
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              _selectedCategoryIndex < _categories.length
+                  ? _categories[_selectedCategoryIndex].description
+                  : '',
+              style: const TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: Colors.black54,
               ),
             ),
+          ),
 
           // 선택된 카테고리의 정보 항목 목록
           Expanded(
@@ -234,49 +240,10 @@ class _InfoScreenState extends State<InfoScreen> {
                     },
                   )
                 : const Center(
-                    child: Text('카테고리를 선택해주세요.'),
+                    child: Text('Please select a category'),
                   ),
           ),
         ],
-      ),
-      bottomNavigationBar: Container(
-        height: 60,
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Colors.black12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(
-              icon: Icons.home,
-              label: 'Home',
-              onTap: () {
-                context.go('/');
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.map,
-              label: 'Map',
-              onTap: () {
-                context.go('/map');
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.people,
-              label: 'Community',
-              onTap: () {
-                context.go('/community');
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.info,
-              label: 'Info',
-              isSelected: true,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -319,7 +286,7 @@ class _InfoScreenState extends State<InfoScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '이미지를 불러올 수 없습니다',
+                            'Failed to load image',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -350,35 +317,6 @@ class _InfoScreenState extends State<InfoScreen> {
                   style: const TextStyle(fontSize: 14),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    bool isSelected = false,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.blue : Colors.black54,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? Colors.blue : Colors.black54,
             ),
           ),
         ],

@@ -60,6 +60,34 @@ class _StagesMapScreenState extends ConsumerState<StagesMapScreen> {
 
     // 사용자 위치 가져오기
     _initLocationService();
+
+    // GoRouter의 extra에서 위치 정보를 확인
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = this.context;
+      final routeState = GoRouterState.of(context);
+
+      if (routeState.extra != null && routeState.extra is Map) {
+        final extra = routeState.extra as Map;
+        if (extra.containsKey('location') && extra.containsKey('name')) {
+          final location = extra['location'] as LatLng;
+          final name = extra['name'] as String;
+
+          // 특정 위치로 지도 이동
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              if (_mapController.camera != null) {
+                _mapController.move(location, 13.0);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('$name 위치로 이동했습니다')),
+                );
+              }
+            } catch (e) {
+              print('지도 이동 중 오류: $e');
+            }
+          });
+        }
+      }
+    });
   }
 
   @override
@@ -709,79 +737,6 @@ class _StagesMapScreenState extends ConsumerState<StagesMapScreen> {
                 ),
               ),
             ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        height: 60,
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Colors.black12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(
-              icon: Icons.home,
-              label: 'Home',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HomeScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.map,
-              label: 'Map',
-              isSelected: true,
-            ),
-            _buildNavItem(
-              icon: Icons.people,
-              label: 'Community',
-              onTap: () {
-                context.go('/community');
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.info,
-              label: 'Info',
-              onTap: () {
-                context.go('/info');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    bool isSelected = false,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.blue : Colors.black54,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? Colors.blue : Colors.black54,
-            ),
-          ),
         ],
       ),
     );

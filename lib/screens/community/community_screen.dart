@@ -16,8 +16,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     PostItem(
       username: 'pilgrim_john',
       location: 'Roncesvalles',
-      timeAgo: '2시간 전',
-      content: '첫 번째 스테이지를 끝마쳤습니다! 피레네 산맥을 건너는 것은 힘들었지만 아름다운 경험이었어요.',
+      timeAgo: '2 hours ago',
+      content:
+          'Completed the first stage! Crossing the Pyrenees was challenging but a beautiful experience.',
       likes: 24,
       comments: 5,
       imageUrl: 'https://source.unsplash.com/random/800x600/?hiking,camino',
@@ -25,8 +26,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     PostItem(
       username: 'camino_maria',
       location: 'Pamplona',
-      timeAgo: '어제',
-      content: '팜플로나에서의 아름다운 석양. 내일은 푸엔테 라 레이나로 출발합니다. 누구 같이 걸을 사람?',
+      timeAgo: 'Yesterday',
+      content:
+          'Beautiful sunset in Pamplona. Heading to Puente la Reina tomorrow. Anyone walking together?',
       likes: 36,
       comments: 8,
       imageUrl: 'https://source.unsplash.com/random/800x600/?sunset,spain',
@@ -34,8 +36,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     PostItem(
       username: 'hiking_peter',
       location: 'León',
-      timeAgo: '3일 전',
-      content: '레온 대성당은 반드시 방문해야 할 곳입니다. 스테인드글라스의 아름다움은 정말 놀랍습니다.',
+      timeAgo: '3 days ago',
+      content:
+          'León Cathedral is a must-visit place. The beauty of the stained glass is truly remarkable.',
       likes: 42,
       comments: 7,
       imageUrl: 'https://source.unsplash.com/random/800x600/?cathedral,spain',
@@ -43,8 +46,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     PostItem(
       username: 'buen_camino',
       location: 'O Cebreiro',
-      timeAgo: '1주일 전',
-      content: '오 세브레이로에 눈이 내렸습니다! 겨울에 카미노를 걷는 것은 또 다른 경험이네요.',
+      timeAgo: '1 week ago',
+      content:
+          'It\'s snowing in O Cebreiro! Walking the Camino in winter is a completely different experience.',
       likes: 51,
       comments: 12,
       imageUrl: 'https://source.unsplash.com/random/800x600/?snow,mountains',
@@ -55,13 +59,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('카미노 커뮤니티'),
+        title: const Text('Camino Community'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('검색 기능은 개발 중입니다.')),
+                const SnackBar(
+                    content: Text('Search feature is under development')),
               );
             },
           ),
@@ -69,7 +74,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('알림 기능은 개발 중입니다.')),
+                const SnackBar(
+                    content: Text('Notification feature is under development')),
               );
             },
           ),
@@ -85,49 +91,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('새 게시물 작성 기능은 개발 중입니다.')),
+            const SnackBar(
+                content: Text('New post feature is under development')),
           );
         },
         child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: Container(
-        height: 60,
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Colors.black12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(
-              icon: Icons.home,
-              label: 'Home',
-              onTap: () {
-                context.go('/');
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.map,
-              label: 'Map',
-              onTap: () {
-                context.go('/map');
-              },
-            ),
-            _buildNavItem(
-              icon: Icons.people,
-              label: 'Community',
-              isSelected: true,
-            ),
-            _buildNavItem(
-              icon: Icons.info,
-              label: 'Info',
-              onTap: () {
-                context.go('/info');
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -192,7 +160,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '이미지를 불러올 수 없습니다',
+                          'Failed to load image',
                           style: TextStyle(
                             color: Colors.grey.shade600,
                           ),
@@ -225,35 +193,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   onPressed: () {},
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    bool isSelected = false,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.blue : Colors.black54,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? Colors.blue : Colors.black54,
             ),
           ),
         ],
