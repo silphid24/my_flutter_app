@@ -8,7 +8,7 @@ import 'package:my_flutter_app/presentation/features/info/info_screen.dart';
 import 'package:my_flutter_app/presentation/features/routes/route_list_screen.dart';
 import 'package:my_flutter_app/presentation/features/tracks/track_map_screen.dart';
 import 'package:my_flutter_app/presentation/features/tracks/gpx_loader_screen.dart';
-import 'package:my_flutter_app/screens/camino_map_screen.dart';
+import 'package:my_flutter_app/presentation/features/camino/camino_map_screen.dart';
 import 'package:my_flutter_app/login_screen.dart';
 import 'package:my_flutter_app/presentation/pages/auth/signup_page.dart';
 import 'package:my_flutter_app/presentation/pages/profile/profile_page.dart';
