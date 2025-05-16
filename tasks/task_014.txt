@@ -1,0 +1,25 @@
+# Task ID: 14
+# Title: Health and Activity Tracking
+# Status: pending
+# Dependencies: 4
+# Priority: low
+# Description: Implement health and activity tracking features including steps, elevation gain, and calories.
+# Details:
+1. Research and integrate health tracking libraries
+2. Implement step counting functionality
+3. Create elevation gain calculation from GPS data
+4. Implement calorie estimation algorithm
+5. Design UI for displaying health statistics
+6. Add daily, weekly, and total journey statistics
+7. Implement goals and achievements for activity metrics
+8. Create data visualization for activity history
+9. Add integration with health platforms (Google Fit, Apple Health)
+10. Implement battery-efficient tracking
+
+# Test Strategy:
+1. Test step counting accuracy
+2. Verify elevation calculation with known routes
+3. Test calorie estimation for different user profiles
+4. Measure battery impact of tracking features
+5. Test health platform integration
+6. Verify data persistence and historical view

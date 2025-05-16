@@ -1,0 +1,24 @@
+# Task ID: 12
+# Title: Off-Route Alerts and Rerouting
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Implement visual cues and notifications when user strays beyond a set radius from the route with automatic rerouting suggestions.
+# Details:
+1. Design algorithm to detect when user is off-route
+2. Implement configurable radius threshold
+3. Create visual indicators for off-route status
+4. Add vibration and sound alerts
+5. Implement automatic rerouting calculation
+6. Create UI for displaying rerouting suggestions
+7. Add option to ignore alerts or adjust sensitivity
+8. Implement battery-efficient location monitoring
+9. Create offline support for off-route detection
+
+# Test Strategy:
+1. Test off-route detection accuracy
+2. Verify alert triggering at different thresholds
+3. Test rerouting suggestions quality
+4. Measure battery impact of continuous monitoring
+5. Test in areas with poor GPS signal
+6. Verify offline functionality

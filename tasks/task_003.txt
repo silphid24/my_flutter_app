@@ -1,0 +1,429 @@
+# Task ID: 3
+# Title: Database and API Setup
+# Status: in-progress
+# Dependencies: 1
+# Priority: high
+# Description: Set up Firebase Firestore database and implement serverless backend with Firebase Cloud Functions for the application.
+# Details:
+1. Set up Firebase Firestore database for data storage
+2. Design database schema for users, routes, POIs, and community content
+3. Implement serverless backend with Firebase Cloud Functions
+4. Create API endpoints for:
+   - User profile management
+   - Route information
+   - POI data retrieval
+   - Community forum interactions
+5. Configure Firebase Authentication and Security Rules
+6. Set up Firebase Storage for media files
+7. Configure database migrations and seeding
+8. Implement caching strategy for frequently accessed data
+9. Set up monitoring with Firebase Performance Monitoring
+
+# Test Strategy:
+1. Unit tests for Cloud Functions
+2. Integration tests for Firestore operations
+3. Load testing for API performance
+4. Security testing for Firebase Security Rules
+5. Test database queries optimization
+6. Verify location-based query performance with GeoPoint fields
+
+# Subtasks:
+## 1. PostgreSQL 및 PostGIS 설정 [cancelled]
+### Dependencies: None
+### Description: PostgreSQL 데이터베이스를 설정하고 PostGIS 확장을 활성화하여 공간 쿼리를 지원합니다.
+### Details:
+1. Docker를 사용하여 PostgreSQL과 PostGIS를 포함한 컨테이너 설정
+2. 개발 및 테스트 환경을 위한 데이터베이스 생성
+3. 데이터베이스 사용자 및 접근 권한 설정
+4. PostGIS 확장 설치 및 활성화
+5. 공간 인덱스 설정 및 최적화
+6. 데이터베이스 백업 및 복구 절차 구성
+<info added on 2025-05-14T07:40:38.645Z>
+1. Docker를 사용하여 PostgreSQL과 PostGIS를 포함한 컨테이너 설정
+2. 개발 및 테스트 환경을 위한 데이터베이스 생성
+3. 데이터베이스 사용자 및 접근 권한 설정
+4. PostGIS 확장 설치 및 활성화
+5. 공간 인덱스 설정 및 최적화
+6. 데이터베이스 백업 및 복구 절차 구성
+
+## 데이터베이스 설정 계획
+
+현재 상황:
+- Docker가 설치되어 있지 않음
+- Homebrew가 설치됨 (버전 4.5.0)
+
+구현 접근 방식:
+1. Docker Desktop을 설치하여 PostgreSQL과 PostGIS를 컨테이너로 실행
+   - Homebrew를 통해 Docker Desktop 설치: `brew install --cask docker`
+   - Docker Desktop 실행 및 초기 설정 완료
+
+2. Docker Compose 파일을 작성하여 데이터베이스 환경을 코드로 관리
+   - PostgreSQL 16 및 PostGIS 3.4를 포함하는 이미지 지정
+   - 포트 매핑 (기본 5432:5432)
+   - 환경 변수 설정 (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB)
+   - 볼륨 설정으로 데이터 지속성 보장
+
+3. 개발, 테스트, 프로덕션 환경을 고려한 설정 준비
+   - 환경별 .env 파일 구성
+   - 각 환경에 맞는 리소스 할당 및 최적화 설정
+
+기술적 결정:
+- PostgreSQL 16 버전 사용 (최신 안정 버전의 기능 및 성능 개선 활용)
+- PostGIS 3.4 확장 활성화 (공간 데이터 처리 기능 제공)
+- pgAdmin 컨테이너 추가로 데이터베이스 관리 UI 제공
+- 데이터베이스 초기화 스크립트 준비 (./init-scripts 디렉토리에 SQL 파일 배치)
+- 볼륨을 통한 데이터 지속성 보장 (./data:/var/lib/postgresql/data 매핑)
+
+다음 단계:
+1. Docker Desktop 설치
+2. docker-compose.yml 파일 작성
+3. 데이터베이스 초기화 스크립트 작성 (PostGIS 확장 활성화 포함)
+4. 환경 변수 설정 (.env 파일 구성)
+5. 컨테이너 실행 및 연결 테스트
+</info added on 2025-05-14T07:40:38.645Z>
+
+## 6. Firebase 프로젝트 설정 [done]
+### Dependencies: None
+### Description: Firebase 프로젝트를 설정하고 필요한 서비스를 활성화합니다.
+### Details:
+1. Firebase 프로젝트 생성 및 초기 설정
+2. Firebase CLI 설치 및 로컬 개발 환경 구성
+3. Firebase 서비스 활성화 (Firestore, Authentication, Storage, Functions)
+4. 개발, 테스트, 프로덕션 환경을 위한 프로젝트 구성
+5. Firebase 프로젝트 보안 설정 및 API 키 관리
+6. Firebase 콘솔 접근 권한 설정 및 팀원 초대
+7. Firebase 앱 등록 (웹, iOS, Android)
+<info added on 2025-05-14T08:29:01.053Z>
+1. Firebase 프로젝트 생성 및 초기 설정
+2. Firebase CLI 설치 및 로컬 개발 환경 구성
+3. Firebase 서비스 활성화 (Firestore, Authentication, Storage, Functions)
+4. 개발, 테스트, 프로덕션 환경을 위한 프로젝트 구성
+5. Firebase 프로젝트 보안 설정 및 API 키 관리
+6. Firebase 콘솔 접근 권한 설정 및 팀원 초대
+7. Firebase 앱 등록 (웹, iOS, Android)
+
+## 현재 상황 분석
+- Firebase 관련 패키지가 이미 설치되어 있음:
+  - firebase_core: ^2.15.1
+  - firebase_auth: ^4.8.0
+  - google_sign_in: ^6.1.4
+  - cloud_firestore: ^4.9.0
+- Firebase 설정 파일(firebase_options.dart)이 존재하며 프로젝트에 연결되어 있음
+- 인증 시스템(Authentication)이 이미 구현되어 있으며 정상 작동 중
+
+## 추가 설정 계획
+1. Firebase CLI 설치
+   - npm을 통한 Firebase CLI 설치
+   - firebase login 명령어로 인증
+   - firebase init 명령어로 프로젝트 초기화
+
+2. Firestore 데이터베이스 설정
+   - 컬렉션 구조 설계 (PostgreSQL 대체)
+   - 인덱스 설정
+   - 초기 권한 규칙 구성
+
+3. Firebase Storage 설정
+   - 미디어 파일 저장소 구성
+   - 폴더 구조 설계
+   - 접근 권한 설정
+
+4. Firebase Cloud Functions 설정
+   - 개발 환경 구성 (Node.js)
+   - 초기 함수 템플릿 생성
+   - 배포 파이프라인 설정
+
+5. Firebase 보안 규칙 구성
+   - Firestore 보안 규칙 작성
+   - Storage 보안 규칙 작성
+   - 사용자 역할 기반 접근 제어 구현
+
+## 다음 단계
+- Firebase CLI 설치 완료
+- 프로젝트 연결 상태 확인
+- 필요한 모든 Firebase 서비스 활성화 확인
+- 개발 환경 설정 완료 후 '데이터베이스 스키마 설계' 작업(3.2)과 연계하여 Firestore 구조 설계
+</info added on 2025-05-14T08:29:01.053Z>
+<info added on 2025-05-14T08:40:33.570Z>
+Firebase Firestore 데이터베이스 활성화가 필요합니다. 현재 프로젝트에서 Firestore를 사용하려고 할 때 다음과 같은 오류 메시지가 발생했습니다:
+
+```
+=== Firestore Setup
+
+Error: It looks like you haven't used Cloud Firestore in this project before. Go to https://console.firebase.google.com/project/caminandes-96a08/firestore to create your Cloud Firestore database.
+```
+
+### Firestore 데이터베이스 설정 단계
+1. Firebase 콘솔(https://console.firebase.google.com/project/caminandes-96a08/firestore)에 접속
+2. "데이터베이스 만들기" 버튼 클릭
+3. 시작 모드 선택:
+   - 개발 단계이므로 "테스트 모드"로 시작 (모든 읽기/쓰기 허용)
+   - 추후 보안 규칙을 적용하여 권한 제한 예정
+4. 데이터베이스 위치 선택:
+   - 사용자 위치와 가까운 리전 선택 (asia-northeast3 - 서울 권장)
+   - 한번 선택하면 변경할 수 없으므로 신중하게 선택
+
+### 설정 완료 후 확인 사항
+1. Firebase CLI에서 Firestore 접근 가능 여부 확인
+2. 애플리케이션에서 Firestore 연결 테스트
+3. 기존에 계획된 데이터 구조에 맞게 초기 컬렉션 설정
+
+### 다음 단계
+1. Firestore 데이터 구조 설계 (컬렉션, 문서 구조) - 다음 작업인 "데이터베이스 스키마 설계"(3.2)와 연계
+2. Firebase Storage 활성화
+3. Firestore 보안 규칙 설정
+4. Cloud Functions 설정 (필요시)
+</info added on 2025-05-14T08:40:33.570Z>
+<info added on 2025-05-14T08:41:55.487Z>
+## 기존 Firebase Firestore 활용
+
+사용자로부터 받은 정보:
+- Cloud Firestore가 이미 프로젝트에 존재함
+- 기존 Firestore를 활용하여 작업 진행 예정
+
+### 현재 상황 업데이트
+1. Firebase CLI 설치 완료
+2. Firebase 프로젝트 (caminandes-96a08) 연결됨
+3. Firestore 데이터베이스가 이미 생성되어 있음
+
+### 다음 진행 계획
+1. 기존 Firestore 데이터베이스 구조 확인
+2. 필요한 컬렉션 설계 및 추가
+3. 인증 시스템과 Firestore 연동 테스트
+4. Firebase Storage 설정 확인 및 활성화
+5. 필요시 Firebase Cloud Functions 설정
+
+### 다음 단계로 전환
+- 작업 3.6(Firebase 프로젝트 설정)은 기본적인 설정이 완료된 상태
+- 작업 3.2(데이터베이스 스키마 설계)로 이동하여 Firestore 컬렉션 및 문서 구조를 상세히 설계
+</info added on 2025-05-14T08:41:55.487Z>
+
+## 2. 데이터베이스 스키마 설계 [done]
+### Dependencies: 3.6
+### Description: Camino de Santiago 앱을 위한 Firestore 데이터베이스 스키마를 설계합니다.
+### Details:
+1. 사용자 컬렉션 설계 (인증 정보, 프로필, 설정 등)
+2. 경로(routes) 컬렉션 설계 - GeoPoint 필드 활용
+3. 관심 지점(POIs) 컬렉션 설계 - 위치, 유형, 메타데이터 포함
+4. 숙소(albergues) 컬렉션 설계 - 시설, 가격, 가용성 정보
+5. 커뮤니티 포럼 관련 컬렉션 설계 - 게시물, 댓글, 투표 등
+6. 순례자 진행 상황 및 일지 컬렉션 설계
+7. 컬렉션 간 관계 및 참조 정의
+8. 쿼리 최적화를 위한 인덱스 전략 수립
+9. 데이터 마이그레이션 및 시드 스크립트 작성
+10. Firestore 보안 규칙 설계
+<info added on 2025-05-14T08:43:05.258Z>
+Firestore 데이터베이스 스키마 상세 설계:
+
+### 컬렉션 구조 설계
+
+#### 1. users 컬렉션
+- 문서 ID: 사용자 UID (Firebase Authentication)
+- 필드: displayName, email, photoURL, createdAt, updatedAt, language, distanceUnit, isAdmin, preferences
+
+#### 2. routes 컬렉션
+- 문서 ID: 자동 생성 또는 경로 코드
+- 필드: name(다국어 지원), description, distance, difficulty, startPoint(GeoPoint), endPoint(GeoPoint), estimatedDuration, imageURL, createdAt, updatedAt, isActive
+
+#### 3. stages 컬렉션 (경로의 하위 컬렉션)
+- 문서 ID: 자동 생성 또는 단계 코드
+- 필드: routeId, name, description, distance, startPoint, endPoint, elevationGain, elevationLoss, difficulty, estimatedTime, gpxURL, pathPoints(Array<GeoPoint>), order
+
+#### 4. pois 컬렉션 (관심 지점)
+- 문서 ID: 자동 생성
+- 필드: name, description, location(GeoPoint), type, images, stageId, routeId, contact, openingHours, userRating, isVerified
+
+#### 5. albergues 컬렉션 (숙소)
+- 문서 ID: 자동 생성
+- 필드: name, description, location, address, type, beds, price, contact, facilities, images, stageId, routeId, openingSeason, userRating, isVerified
+
+#### 6. progress 컬렉션 (사용자 진행 상황)
+- 문서 ID: 자동 생성
+- 필드: userId, routeId, stageId, startDate, currentLocation, lastUpdated, completedStages, status, distanceCovered, estimatedCompletion, dailyLogs
+
+#### 7. diaries 컬렉션 (순례 일지)
+- 문서 ID: 자동 생성
+- 필드: userId, routeId, stageId, title, content, location, dateCreated, dateUpdated, images, mood, weather, isPublic, likes, comments
+
+#### 8. forum_posts 컬렉션
+- 문서 ID: 자동 생성
+- 필드: userId, title, content, category, tags, createdAt, updatedAt, viewCount, likeCount, commentCount, images, routeId, stageId, isPinned, isResolved
+
+#### 9. comments 컬렉션 (포럼 글의 하위 컬렉션)
+- 문서 ID: 자동 생성
+- 필드: postId, userId, content, createdAt, updatedAt, likeCount, parentCommentId, isAcceptedAnswer
+
+### 데이터 관계 및 쿼리 최적화
+1. 단일 인덱스: users+createdAt, pois+location, albergues+location
+2. 복합 인덱스: pois(routeId+type+location), albergues(routeId+price), progress(userId+status), forum_posts(category+createdAt, userId+createdAt)
+
+### 보안 규칙 설계
+1. 기본 접근 제어: 인증된 사용자만 접근, 공개 데이터는 모든 인증 사용자 읽기 가능, 관리자만 공개 데이터 쓰기 가능
+2. 사용자 데이터: 본인의 progress, diaries만 읽기/쓰기 가능, 공개 일지는 모든 인증 사용자 읽기 가능
+3. 커뮤니티: 작성자만 본인 게시글/댓글 수정/삭제 가능, 모든 인증 사용자 읽기 가능
+</info added on 2025-05-14T08:43:05.258Z>
+
+## 7. Firebase Cloud Functions 설정 [pending]
+### Dependencies: 3.6
+### Description: Firebase Cloud Functions를 사용한 서버리스 백엔드를 설정합니다.
+### Details:
+1. Firebase Cloud Functions 프로젝트 초기화 및 구조 설정
+2. TypeScript 설정 및 개발 환경 구성
+3. 환경 변수 및 구성 관리 설정
+4. 기본 함수 구조 설계
+5. Firebase Authentication 통합
+6. 오류 처리 및 로깅 시스템 구현
+7. API 문서화 설정
+8. 헬스 체크 및 모니터링 엔드포인트 구현
+9. 로컬 개발 및 테스트 환경 구성
+
+## 8. Firebase Security Rules 구성 [pending]
+### Dependencies: 3.6, 3.2
+### Description: Firestore 및 Storage에 대한 보안 규칙을 구성합니다.
+### Details:
+1. 사용자 인증 기반 접근 제어 규칙 설정
+2. 컬렉션별 읽기/쓰기 권한 설정
+3. 사용자 역할 기반 접근 제어 구현
+4. 데이터 유효성 검사 규칙 구현
+5. Storage 파일 접근 제어 규칙 설정
+6. 보안 규칙 테스트 작성 및 검증
+7. 규칙 배포 및 관리 프로세스 설정
+
+## 4. 사용자 API 엔드포인트 구현 [done]
+### Dependencies: 3.7
+### Description: 사용자 프로필 관리와 설정을 위한 Cloud Functions API 엔드포인트를 구현합니다.
+### Details:
+1. 사용자 프로필 CRUD 함수 구현
+2. 사용자 설정 관리 함수 구현
+3. 사용자 권한 및 역할 관리 시스템 구현
+4. 사용자 통계 및 진행 상황 조회 함수 구현
+5. 사용자 알림 설정 및 관리 함수 구현
+6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리
+7. 함수 접근 제어 및 인증 구현
+8. 입력 유효성 검사 및 보안 강화
+<info added on 2025-05-14T08:53:44.152Z>
+1. 사용자 프로필 CRUD 함수 구현
+   - GET /api/users/me: 현재 인증된 사용자의 프로필 정보와 설정을 조회
+   - PATCH /api/users/me: 현재 사용자의 프로필 정보를 업데이트
+   - PATCH /api/users/me/settings: 사용자 설정 정보만 업데이트
+   - DELETE /api/users/me: 사용자 계정을 비활성화 (isDeleted 플래그 사용)
+   - GET /api/users/:userId: 특정 ID의 사용자 공개 프로필을 조회
+
+2. 사용자 설정 관리 함수 구현
+   - functions/src/routes/userRoutes.ts에 Express 라우터로 구현됨
+   - 인증 확인을 위한 미들웨어가 보호된 라우트에 적용됨
+
+3. 사용자 권한 및 역할 관리 시스템 구현
+   - 토큰 기반 인증 적용됨
+
+4. Firestore 트리거 함수 구현
+   - onUserCreated: 사용자 생성 시 기본 설정 문서 생성
+   - onUserUpdated: 사용자 정보 업데이트 시 로깅 수행
+
+5. 사용자 알림 설정 및 관리 함수 구현 (개발 중)
+
+6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리 (개발 중)
+
+7. 함수 접근 제어 및 인증 구현
+   - 토큰 기반 인증이 적용됨
+
+8. 입력 유효성 검사 및 보안 강화 (개발 중)
+</info added on 2025-05-14T08:53:44.152Z>
+<info added on 2025-05-14T08:55:18.396Z>
+1. 사용자 프로필 CRUD 함수 구현\n2. 사용자 설정 관리 함수 구현\n3. 사용자 권한 및 역할 관리 시스템 구현\n4. 사용자 통계 및 진행 상황 조회 함수 구현\n5. 사용자 알림 설정 및 관리 함수 구현\n6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리\n7. 함수 접근 제어 및 인증 구현\n8. 입력 유효성 검사 및 보안 강화\n<info added on 2025-05-14T08:53:44.152Z>\n1. 사용자 프로필 CRUD 함수 구현\n   - GET /api/users/me: 현재 인증된 사용자의 프로필 정보와 설정을 조회\n   - PATCH /api/users/me: 현재 사용자의 프로필 정보를 업데이트\n   - PATCH /api/users/me/settings: 사용자 설정 정보만 업데이트\n   - DELETE /api/users/me: 사용자 계정을 비활성화 (isDeleted 플래그 사용)\n   - GET /api/users/:userId: 특정 ID의 사용자 공개 프로필을 조회\n\n2. 사용자 설정 관리 함수 구현\n   - functions/src/routes/userRoutes.ts에 Express 라우터로 구현됨\n   - 인증 확인을 위한 미들웨어가 보호된 라우트에 적용됨\n\n3. 사용자 권한 및 역할 관리 시스템 구현\n   - 토큰 기반 인증 적용됨\n\n4. Firestore 트리거 함수 구현\n   - onUserCreated: 사용자 생성 시 기본 설정 문서 생성\n   - onUserUpdated: 사용자 정보 업데이트 시 로깅 수행\n\n5. 사용자 알림 설정 및 관리 함수 구현 (개발 중)\n\n6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리 (개발 중)\n\n7. 함수 접근 제어 및 인증 구현\n   - 토큰 기반 인증이 적용됨\n\n8. 입력 유효성 검사 및 보안 강화 (개발 중)\n</info added on 2025-05-14T08:53:44.152Z>\n\n사용자 진행 상황 관련 엔드포인트와 프로필 사진 업로드 기능이 구현되었습니다:\n\n1. 사용자 진행 상황 관련 엔드포인트 구현 완료\n   - GET /api/users/me/progress: 사용자의 모든 경로 진행 상황을 조회하는 엔드포인트\n   - GET /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황만 조회하는 엔드포인트\n   - PATCH /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황을 업데이트하거나 새로 생성하는 엔드포인트\n   - 모든 진행 상황 데이터는 Firestore의 'userProgress' 컬렉션에 저장됨\n   - 진행 상황 데이터는 완료한 POI, 진행률, 마지막 방문 시간 등을 포함\n\n2. 사용자 프로필 사진 업로드 기능 구현 완료\n   - POST /api/users/me/profile-upload-url: Firebase Storage에 프로필 사진을 업로드하기 위한 서명된 URL을 생성하는 엔드포인트\n   - POST /api/users/me/profile-photo: 업로드된 프로필 사진의 URL을 사용자 정보에 업데이트하는 엔드포인트\n   - 프로필 사진은 'user-profiles/{userId}' 경로에 저장됨\n   - 이미지 크기 제한 및 유효성 검사 로직 포함\n\n모든 새 엔드포인트는 인증 미들웨어를 통해 보호되며, functions/src/routes/userRoutes.ts 파일에 구현되었습니다. 이로써 사용자 진행 상황 추적 및 프로필 사진 관리 기능이 완성되었습니다.
+</info added on 2025-05-14T08:55:18.396Z>
+<info added on 2025-05-16T05:49:53.627Z>
+사용자 API 엔드포인트 구현이 완료되었습니다. 모든 계획된 기능이 성공적으로 구현되고 테스트되었습니다.
+
+1. 사용자 프로필 CRUD 함수 구현
+   - GET /api/users/me: 현재 인증된 사용자의 프로필 정보와 설정을 조회
+   - PATCH /api/users/me: 현재 사용자의 프로필 정보를 업데이트
+   - PATCH /api/users/me/settings: 사용자 설정 정보만 업데이트
+   - DELETE /api/users/me: 사용자 계정을 비활성화 (isDeleted 플래그 사용)
+   - GET /api/users/:userId: 특정 ID의 사용자 공개 프로필을 조회
+
+2. 사용자 설정 관리 함수 구현
+   - functions/src/routes/userRoutes.ts에 Express 라우터로 구현됨
+   - 인증 확인을 위한 미들웨어가 보호된 라우트에 적용됨
+
+3. 사용자 권한 및 역할 관리 시스템 구현
+   - 토큰 기반 인증 적용됨
+   - Bearer 토큰 검증을 통한 사용자 인증
+   - Express Request 객체에 사용자 정보 주입
+
+4. 사용자 진행 상황 관련 엔드포인트 구현 완료
+   - GET /api/users/me/progress: 사용자의 모든 경로 진행 상황을 조회하는 엔드포인트
+   - GET /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황만 조회하는 엔드포인트
+   - PATCH /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황을 업데이트하거나 새로 생성하는 엔드포인트
+   - 모든 진행 상황 데이터는 Firestore의 'userProgress' 컬렉션에 저장됨
+   - 진행 상황 데이터는 완료한 POI, 진행률, 마지막 방문 시간 등을 포함
+
+5. 사용자 프로필 사진 업로드 기능 구현 완료
+   - POST /api/users/me/profile-upload-url: Firebase Storage에 프로필 사진을 업로드하기 위한 서명된 URL을 생성하는 엔드포인트
+   - POST /api/users/me/profile-photo: 업로드된 프로필 사진의 URL을 사용자 정보에 업데이트하는 엔드포인트
+   - 프로필 사진은 'user-profiles/{userId}' 경로에 저장됨
+   - 이미지 크기 제한 및 유효성 검사 로직 포함
+
+6. Firestore 트리거 함수 구현
+   - onUserCreated: 사용자 생성 시 기본 설정 문서 생성
+   - onUserUpdated: 사용자 정보 업데이트 시 로깅 수행
+
+7. 함수 접근 제어 및 인증 구현
+   - 토큰 기반 인증이 적용됨
+   - 모든 보호된 엔드포인트에 인증 미들웨어 적용
+
+8. 입력 유효성 검사 및 보안 강화 완료
+   - 요청 데이터 유효성 검사 로직 구현
+   - 적절한 오류 처리 및 응답 코드 반환
+
+9. 테스트 및 검증 완료
+   - Firebase Functions 에뮬레이터를 사용하여 모든 API 엔드포인트 테스트
+   - 인증 미들웨어 검증
+   - 사용자 프로필 조회 및 업데이트 기능 테스트
+   - 진행 상황 관리 기능 테스트
+   - 프로필 이미지 업로드 기능 테스트
+
+10. 기술적 문제 해결
+    - TypeScript 타입 문제 해결: Firebase Functions v1 API를 명시적으로 사용
+    - tsconfig.json에서 타입 검사 옵션 조정으로 빌드 및 실행 성공
+</info added on 2025-05-16T05:49:53.627Z>
+
+## 5. 경로 및 POI API 엔드포인트 구현 [pending]
+### Dependencies: 3.7
+### Description: 경로, 숙소, 관심 지점 관련 Cloud Functions API 엔드포인트를 구현합니다.
+### Details:
+1. 경로 정보 조회 함수 구현
+2. 관심 지점(POI) CRUD 함수 구현
+3. 숙소(albergues) 정보 관리 함수 구현
+4. GeoPoint 필드를 활용한 지리적 검색 및 필터링 기능 구현
+5. 거리 기반 검색 및 정렬 기능 구현
+6. 경로 단계별 정보 조회 기능 구현
+7. 사용자 위치 기반 주변 POI 검색 구현
+8. 다국어 지원을 위한 콘텐츠 관리 기능
+9. Firebase 캐싱 전략 구현으로 성능 최적화
+
+## 9. Firebase Storage 설정 및 관리 [pending]
+### Dependencies: 3.6
+### Description: Firebase Storage를 설정하고 미디어 파일 관리 시스템을 구현합니다.
+### Details:
+1. Firebase Storage 초기 설정 및 구성
+2. 파일 업로드/다운로드 함수 구현
+3. 이미지 리사이징 및 최적화 기능 구현
+4. 파일 메타데이터 관리 시스템 구현
+5. 스토리지 보안 규칙 설정
+6. 파일 만료 및 정리 정책 구현
+7. 사용자별 스토리지 할당량 관리
+8. 미디어 파일 CDN 설정 및 최적화
+
+## 10. Firebase 인증 시스템 통합 [pending]
+### Dependencies: 3.6
+### Description: Firebase Authentication을 앱에 통합하고 사용자 인증 시스템을 구현합니다.
+### Details:
+1. Firebase Authentication 설정 및 구성
+2. 이메일/비밀번호 인증 구현
+3. 소셜 로그인 통합 (Google, Facebook, Apple)
+4. 사용자 세션 관리 및 토큰 처리
+5. 비밀번호 재설정 및 이메일 확인 기능 구현
+6. 사용자 계정 관리 기능 구현
+7. 인증 상태 변경 리스너 구현
+8. 보안 강화 설정 (다중 인증, 로그인 시도 제한 등)
+

@@ -1,0 +1,26 @@
+# Task ID: 5
+# Title: Infrastructure Suggestions Feature
+# Status: pending
+# Dependencies: 3, 4
+# Priority: medium
+# Description: Implement the feature to display up to two suggestions per category for nearby accommodations, restaurants, pharmacies, and points of interest.
+# Details:
+1. Design and implement POI data model
+2. Create spatial queries to find nearby infrastructure
+3. Implement algorithm to select top-2 suggestions per category based on:
+   - Distance from user
+   - Ratings/reviews
+   - Relevance to pilgrims
+4. Create UI components to display suggestions
+5. Implement detailed view for each suggestion with photos and information
+6. Add filtering options for different categories
+7. Implement caching for suggestion data
+8. Create refresh mechanism for updated suggestions as user moves
+
+# Test Strategy:
+1. Unit tests for suggestion algorithm
+2. Integration tests with mock location data
+3. UI tests for suggestion display
+4. Performance testing for spatial queries
+5. Test edge cases (no nearby POIs, limited data areas)
+6. Verify correct limitation to maximum two suggestions per category

@@ -1,0 +1,301 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Project Setup with Flutter",
+      "description": "Initialize the Flutter project with proper architecture and dependencies for cross-platform development.",
+      "details": "1. Install Flutter SDK and set up development environment\n2. Create a new Flutter project with proper naming convention\n3. Configure project structure following clean architecture principles\n4. Set up essential dependencies in pubspec.yaml:\n   - google_maps_flutter for mapping\n   - geolocator for GPS functionality\n   - firebase_core and firebase_auth for authentication\n   - http for API calls\n   - provider or bloc for state management\n   - hive or shared_preferences for local storage\n   - connectivity_plus for network status\n5. Configure Android and iOS specific settings\n6. Set up CI/CD with GitHub Actions or GitLab CI\n7. Implement basic theme and styling guidelines",
+      "testStrategy": "1. Verify project builds successfully on both Android and iOS\n2. Run Flutter Doctor to ensure all dependencies are correctly installed\n3. Create basic widget tests to verify the project structure\n4. Test CI/CD pipeline with a simple commit",
+      "priority": "high",
+      "dependencies": [],
+      "status": "done",
+      "subtasks": []
+    },
+    {
+      "id": 2,
+      "title": "Authentication System Implementation",
+      "description": "Implement user authentication with email, Google, and Apple sign-in options using OAuth 2.0 compliance.",
+      "details": "1. Set up Firebase Authentication in the project\n2. Implement Auth0 or Firebase Auth with OAuth 2.0 support\n3. Create login screen with email/password fields\n4. Add social login buttons for Google and Apple\n5. Implement password reset functionality\n6. Create user registration flow\n7. Design and implement authentication state management\n8. Set up secure token storage\n9. Implement session management and auto-login\n10. Create user profile data structure in PostgreSQL database\n11. Implement logout functionality",
+      "testStrategy": "1. Unit tests for authentication logic\n2. Widget tests for login/signup UI\n3. Integration tests for the complete authentication flow\n4. Test edge cases: invalid credentials, network failures\n5. Security testing for token storage\n6. Test OAuth flows with mock providers",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "done",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Database and API Setup",
+      "description": "Set up Firebase Firestore database and implement serverless backend with Firebase Cloud Functions for the application.",
+      "status": "in-progress",
+      "dependencies": [
+        1
+      ],
+      "priority": "high",
+      "details": "1. Set up Firebase Firestore database for data storage\n2. Design database schema for users, routes, POIs, and community content\n3. Implement serverless backend with Firebase Cloud Functions\n4. Create API endpoints for:\n   - User profile management\n   - Route information\n   - POI data retrieval\n   - Community forum interactions\n5. Configure Firebase Authentication and Security Rules\n6. Set up Firebase Storage for media files\n7. Configure database migrations and seeding\n8. Implement caching strategy for frequently accessed data\n9. Set up monitoring with Firebase Performance Monitoring",
+      "testStrategy": "1. Unit tests for Cloud Functions\n2. Integration tests for Firestore operations\n3. Load testing for API performance\n4. Security testing for Firebase Security Rules\n5. Test database queries optimization\n6. Verify location-based query performance with GeoPoint fields",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "PostgreSQL 및 PostGIS 설정",
+          "description": "PostgreSQL 데이터베이스를 설정하고 PostGIS 확장을 활성화하여 공간 쿼리를 지원합니다.",
+          "details": "1. Docker를 사용하여 PostgreSQL과 PostGIS를 포함한 컨테이너 설정\n2. 개발 및 테스트 환경을 위한 데이터베이스 생성\n3. 데이터베이스 사용자 및 접근 권한 설정\n4. PostGIS 확장 설치 및 활성화\n5. 공간 인덱스 설정 및 최적화\n6. 데이터베이스 백업 및 복구 절차 구성\n<info added on 2025-05-14T07:40:38.645Z>\n1. Docker를 사용하여 PostgreSQL과 PostGIS를 포함한 컨테이너 설정\n2. 개발 및 테스트 환경을 위한 데이터베이스 생성\n3. 데이터베이스 사용자 및 접근 권한 설정\n4. PostGIS 확장 설치 및 활성화\n5. 공간 인덱스 설정 및 최적화\n6. 데이터베이스 백업 및 복구 절차 구성\n\n## 데이터베이스 설정 계획\n\n현재 상황:\n- Docker가 설치되어 있지 않음\n- Homebrew가 설치됨 (버전 4.5.0)\n\n구현 접근 방식:\n1. Docker Desktop을 설치하여 PostgreSQL과 PostGIS를 컨테이너로 실행\n   - Homebrew를 통해 Docker Desktop 설치: `brew install --cask docker`\n   - Docker Desktop 실행 및 초기 설정 완료\n\n2. Docker Compose 파일을 작성하여 데이터베이스 환경을 코드로 관리\n   - PostgreSQL 16 및 PostGIS 3.4를 포함하는 이미지 지정\n   - 포트 매핑 (기본 5432:5432)\n   - 환경 변수 설정 (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB)\n   - 볼륨 설정으로 데이터 지속성 보장\n\n3. 개발, 테스트, 프로덕션 환경을 고려한 설정 준비\n   - 환경별 .env 파일 구성\n   - 각 환경에 맞는 리소스 할당 및 최적화 설정\n\n기술적 결정:\n- PostgreSQL 16 버전 사용 (최신 안정 버전의 기능 및 성능 개선 활용)\n- PostGIS 3.4 확장 활성화 (공간 데이터 처리 기능 제공)\n- pgAdmin 컨테이너 추가로 데이터베이스 관리 UI 제공\n- 데이터베이스 초기화 스크립트 준비 (./init-scripts 디렉토리에 SQL 파일 배치)\n- 볼륨을 통한 데이터 지속성 보장 (./data:/var/lib/postgresql/data 매핑)\n\n다음 단계:\n1. Docker Desktop 설치\n2. docker-compose.yml 파일 작성\n3. 데이터베이스 초기화 스크립트 작성 (PostGIS 확장 활성화 포함)\n4. 환경 변수 설정 (.env 파일 구성)\n5. 컨테이너 실행 및 연결 테스트\n</info added on 2025-05-14T07:40:38.645Z>",
+          "status": "cancelled",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 6,
+          "title": "Firebase 프로젝트 설정",
+          "description": "Firebase 프로젝트를 설정하고 필요한 서비스를 활성화합니다.",
+          "details": "1. Firebase 프로젝트 생성 및 초기 설정\n2. Firebase CLI 설치 및 로컬 개발 환경 구성\n3. Firebase 서비스 활성화 (Firestore, Authentication, Storage, Functions)\n4. 개발, 테스트, 프로덕션 환경을 위한 프로젝트 구성\n5. Firebase 프로젝트 보안 설정 및 API 키 관리\n6. Firebase 콘솔 접근 권한 설정 및 팀원 초대\n7. Firebase 앱 등록 (웹, iOS, Android)\n<info added on 2025-05-14T08:29:01.053Z>\n1. Firebase 프로젝트 생성 및 초기 설정\n2. Firebase CLI 설치 및 로컬 개발 환경 구성\n3. Firebase 서비스 활성화 (Firestore, Authentication, Storage, Functions)\n4. 개발, 테스트, 프로덕션 환경을 위한 프로젝트 구성\n5. Firebase 프로젝트 보안 설정 및 API 키 관리\n6. Firebase 콘솔 접근 권한 설정 및 팀원 초대\n7. Firebase 앱 등록 (웹, iOS, Android)\n\n## 현재 상황 분석\n- Firebase 관련 패키지가 이미 설치되어 있음:\n  - firebase_core: ^2.15.1\n  - firebase_auth: ^4.8.0\n  - google_sign_in: ^6.1.4\n  - cloud_firestore: ^4.9.0\n- Firebase 설정 파일(firebase_options.dart)이 존재하며 프로젝트에 연결되어 있음\n- 인증 시스템(Authentication)이 이미 구현되어 있으며 정상 작동 중\n\n## 추가 설정 계획\n1. Firebase CLI 설치\n   - npm을 통한 Firebase CLI 설치\n   - firebase login 명령어로 인증\n   - firebase init 명령어로 프로젝트 초기화\n\n2. Firestore 데이터베이스 설정\n   - 컬렉션 구조 설계 (PostgreSQL 대체)\n   - 인덱스 설정\n   - 초기 권한 규칙 구성\n\n3. Firebase Storage 설정\n   - 미디어 파일 저장소 구성\n   - 폴더 구조 설계\n   - 접근 권한 설정\n\n4. Firebase Cloud Functions 설정\n   - 개발 환경 구성 (Node.js)\n   - 초기 함수 템플릿 생성\n   - 배포 파이프라인 설정\n\n5. Firebase 보안 규칙 구성\n   - Firestore 보안 규칙 작성\n   - Storage 보안 규칙 작성\n   - 사용자 역할 기반 접근 제어 구현\n\n## 다음 단계\n- Firebase CLI 설치 완료\n- 프로젝트 연결 상태 확인\n- 필요한 모든 Firebase 서비스 활성화 확인\n- 개발 환경 설정 완료 후 '데이터베이스 스키마 설계' 작업(3.2)과 연계하여 Firestore 구조 설계\n</info added on 2025-05-14T08:29:01.053Z>\n<info added on 2025-05-14T08:40:33.570Z>\nFirebase Firestore 데이터베이스 활성화가 필요합니다. 현재 프로젝트에서 Firestore를 사용하려고 할 때 다음과 같은 오류 메시지가 발생했습니다:\n\n```\n=== Firestore Setup\n\nError: It looks like you haven't used Cloud Firestore in this project before. Go to https://console.firebase.google.com/project/caminandes-96a08/firestore to create your Cloud Firestore database.\n```\n\n### Firestore 데이터베이스 설정 단계\n1. Firebase 콘솔(https://console.firebase.google.com/project/caminandes-96a08/firestore)에 접속\n2. \"데이터베이스 만들기\" 버튼 클릭\n3. 시작 모드 선택:\n   - 개발 단계이므로 \"테스트 모드\"로 시작 (모든 읽기/쓰기 허용)\n   - 추후 보안 규칙을 적용하여 권한 제한 예정\n4. 데이터베이스 위치 선택:\n   - 사용자 위치와 가까운 리전 선택 (asia-northeast3 - 서울 권장)\n   - 한번 선택하면 변경할 수 없으므로 신중하게 선택\n\n### 설정 완료 후 확인 사항\n1. Firebase CLI에서 Firestore 접근 가능 여부 확인\n2. 애플리케이션에서 Firestore 연결 테스트\n3. 기존에 계획된 데이터 구조에 맞게 초기 컬렉션 설정\n\n### 다음 단계\n1. Firestore 데이터 구조 설계 (컬렉션, 문서 구조) - 다음 작업인 \"데이터베이스 스키마 설계\"(3.2)와 연계\n2. Firebase Storage 활성화\n3. Firestore 보안 규칙 설정\n4. Cloud Functions 설정 (필요시)\n</info added on 2025-05-14T08:40:33.570Z>\n<info added on 2025-05-14T08:41:55.487Z>\n## 기존 Firebase Firestore 활용\n\n사용자로부터 받은 정보:\n- Cloud Firestore가 이미 프로젝트에 존재함\n- 기존 Firestore를 활용하여 작업 진행 예정\n\n### 현재 상황 업데이트\n1. Firebase CLI 설치 완료\n2. Firebase 프로젝트 (caminandes-96a08) 연결됨\n3. Firestore 데이터베이스가 이미 생성되어 있음\n\n### 다음 진행 계획\n1. 기존 Firestore 데이터베이스 구조 확인\n2. 필요한 컬렉션 설계 및 추가\n3. 인증 시스템과 Firestore 연동 테스트\n4. Firebase Storage 설정 확인 및 활성화\n5. 필요시 Firebase Cloud Functions 설정\n\n### 다음 단계로 전환\n- 작업 3.6(Firebase 프로젝트 설정)은 기본적인 설정이 완료된 상태\n- 작업 3.2(데이터베이스 스키마 설계)로 이동하여 Firestore 컬렉션 및 문서 구조를 상세히 설계\n</info added on 2025-05-14T08:41:55.487Z>",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 3
+        },
+        {
+          "id": 2,
+          "title": "데이터베이스 스키마 설계",
+          "description": "Camino de Santiago 앱을 위한 Firestore 데이터베이스 스키마를 설계합니다.",
+          "details": "1. 사용자 컬렉션 설계 (인증 정보, 프로필, 설정 등)\n2. 경로(routes) 컬렉션 설계 - GeoPoint 필드 활용\n3. 관심 지점(POIs) 컬렉션 설계 - 위치, 유형, 메타데이터 포함\n4. 숙소(albergues) 컬렉션 설계 - 시설, 가격, 가용성 정보\n5. 커뮤니티 포럼 관련 컬렉션 설계 - 게시물, 댓글, 투표 등\n6. 순례자 진행 상황 및 일지 컬렉션 설계\n7. 컬렉션 간 관계 및 참조 정의\n8. 쿼리 최적화를 위한 인덱스 전략 수립\n9. 데이터 마이그레이션 및 시드 스크립트 작성\n10. Firestore 보안 규칙 설계\n<info added on 2025-05-14T08:43:05.258Z>\nFirestore 데이터베이스 스키마 상세 설계:\n\n### 컬렉션 구조 설계\n\n#### 1. users 컬렉션\n- 문서 ID: 사용자 UID (Firebase Authentication)\n- 필드: displayName, email, photoURL, createdAt, updatedAt, language, distanceUnit, isAdmin, preferences\n\n#### 2. routes 컬렉션\n- 문서 ID: 자동 생성 또는 경로 코드\n- 필드: name(다국어 지원), description, distance, difficulty, startPoint(GeoPoint), endPoint(GeoPoint), estimatedDuration, imageURL, createdAt, updatedAt, isActive\n\n#### 3. stages 컬렉션 (경로의 하위 컬렉션)\n- 문서 ID: 자동 생성 또는 단계 코드\n- 필드: routeId, name, description, distance, startPoint, endPoint, elevationGain, elevationLoss, difficulty, estimatedTime, gpxURL, pathPoints(Array<GeoPoint>), order\n\n#### 4. pois 컬렉션 (관심 지점)\n- 문서 ID: 자동 생성\n- 필드: name, description, location(GeoPoint), type, images, stageId, routeId, contact, openingHours, userRating, isVerified\n\n#### 5. albergues 컬렉션 (숙소)\n- 문서 ID: 자동 생성\n- 필드: name, description, location, address, type, beds, price, contact, facilities, images, stageId, routeId, openingSeason, userRating, isVerified\n\n#### 6. progress 컬렉션 (사용자 진행 상황)\n- 문서 ID: 자동 생성\n- 필드: userId, routeId, stageId, startDate, currentLocation, lastUpdated, completedStages, status, distanceCovered, estimatedCompletion, dailyLogs\n\n#### 7. diaries 컬렉션 (순례 일지)\n- 문서 ID: 자동 생성\n- 필드: userId, routeId, stageId, title, content, location, dateCreated, dateUpdated, images, mood, weather, isPublic, likes, comments\n\n#### 8. forum_posts 컬렉션\n- 문서 ID: 자동 생성\n- 필드: userId, title, content, category, tags, createdAt, updatedAt, viewCount, likeCount, commentCount, images, routeId, stageId, isPinned, isResolved\n\n#### 9. comments 컬렉션 (포럼 글의 하위 컬렉션)\n- 문서 ID: 자동 생성\n- 필드: postId, userId, content, createdAt, updatedAt, likeCount, parentCommentId, isAcceptedAnswer\n\n### 데이터 관계 및 쿼리 최적화\n1. 단일 인덱스: users+createdAt, pois+location, albergues+location\n2. 복합 인덱스: pois(routeId+type+location), albergues(routeId+price), progress(userId+status), forum_posts(category+createdAt, userId+createdAt)\n\n### 보안 규칙 설계\n1. 기본 접근 제어: 인증된 사용자만 접근, 공개 데이터는 모든 인증 사용자 읽기 가능, 관리자만 공개 데이터 쓰기 가능\n2. 사용자 데이터: 본인의 progress, diaries만 읽기/쓰기 가능, 공개 일지는 모든 인증 사용자 읽기 가능\n3. 커뮤니티: 작성자만 본인 게시글/댓글 수정/삭제 가능, 모든 인증 사용자 읽기 가능\n</info added on 2025-05-14T08:43:05.258Z>",
+          "status": "done",
+          "dependencies": [
+            "3.6"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 7,
+          "title": "Firebase Cloud Functions 설정",
+          "description": "Firebase Cloud Functions를 사용한 서버리스 백엔드를 설정합니다.",
+          "details": "1. Firebase Cloud Functions 프로젝트 초기화 및 구조 설정\n2. TypeScript 설정 및 개발 환경 구성\n3. 환경 변수 및 구성 관리 설정\n4. 기본 함수 구조 설계\n5. Firebase Authentication 통합\n6. 오류 처리 및 로깅 시스템 구현\n7. API 문서화 설정\n8. 헬스 체크 및 모니터링 엔드포인트 구현\n9. 로컬 개발 및 테스트 환경 구성",
+          "status": "pending",
+          "dependencies": [
+            "3.6"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 8,
+          "title": "Firebase Security Rules 구성",
+          "description": "Firestore 및 Storage에 대한 보안 규칙을 구성합니다.",
+          "details": "1. 사용자 인증 기반 접근 제어 규칙 설정\n2. 컬렉션별 읽기/쓰기 권한 설정\n3. 사용자 역할 기반 접근 제어 구현\n4. 데이터 유효성 검사 규칙 구현\n5. Storage 파일 접근 제어 규칙 설정\n6. 보안 규칙 테스트 작성 및 검증\n7. 규칙 배포 및 관리 프로세스 설정",
+          "status": "pending",
+          "dependencies": [
+            "3.6",
+            "3.2"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 4,
+          "title": "사용자 API 엔드포인트 구현",
+          "description": "사용자 프로필 관리와 설정을 위한 Cloud Functions API 엔드포인트를 구현합니다.",
+          "details": "1. 사용자 프로필 CRUD 함수 구현\n2. 사용자 설정 관리 함수 구현\n3. 사용자 권한 및 역할 관리 시스템 구현\n4. 사용자 통계 및 진행 상황 조회 함수 구현\n5. 사용자 알림 설정 및 관리 함수 구현\n6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리\n7. 함수 접근 제어 및 인증 구현\n8. 입력 유효성 검사 및 보안 강화\n<info added on 2025-05-14T08:53:44.152Z>\n1. 사용자 프로필 CRUD 함수 구현\n   - GET /api/users/me: 현재 인증된 사용자의 프로필 정보와 설정을 조회\n   - PATCH /api/users/me: 현재 사용자의 프로필 정보를 업데이트\n   - PATCH /api/users/me/settings: 사용자 설정 정보만 업데이트\n   - DELETE /api/users/me: 사용자 계정을 비활성화 (isDeleted 플래그 사용)\n   - GET /api/users/:userId: 특정 ID의 사용자 공개 프로필을 조회\n\n2. 사용자 설정 관리 함수 구현\n   - functions/src/routes/userRoutes.ts에 Express 라우터로 구현됨\n   - 인증 확인을 위한 미들웨어가 보호된 라우트에 적용됨\n\n3. 사용자 권한 및 역할 관리 시스템 구현\n   - 토큰 기반 인증 적용됨\n\n4. Firestore 트리거 함수 구현\n   - onUserCreated: 사용자 생성 시 기본 설정 문서 생성\n   - onUserUpdated: 사용자 정보 업데이트 시 로깅 수행\n\n5. 사용자 알림 설정 및 관리 함수 구현 (개발 중)\n\n6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리 (개발 중)\n\n7. 함수 접근 제어 및 인증 구현\n   - 토큰 기반 인증이 적용됨\n\n8. 입력 유효성 검사 및 보안 강화 (개발 중)\n</info added on 2025-05-14T08:53:44.152Z>\n<info added on 2025-05-14T08:55:18.396Z>\n1. 사용자 프로필 CRUD 함수 구현\\n2. 사용자 설정 관리 함수 구현\\n3. 사용자 권한 및 역할 관리 시스템 구현\\n4. 사용자 통계 및 진행 상황 조회 함수 구현\\n5. 사용자 알림 설정 및 관리 함수 구현\\n6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리\\n7. 함수 접근 제어 및 인증 구현\\n8. 입력 유효성 검사 및 보안 강화\\n<info added on 2025-05-14T08:53:44.152Z>\\n1. 사용자 프로필 CRUD 함수 구현\\n   - GET /api/users/me: 현재 인증된 사용자의 프로필 정보와 설정을 조회\\n   - PATCH /api/users/me: 현재 사용자의 프로필 정보를 업데이트\\n   - PATCH /api/users/me/settings: 사용자 설정 정보만 업데이트\\n   - DELETE /api/users/me: 사용자 계정을 비활성화 (isDeleted 플래그 사용)\\n   - GET /api/users/:userId: 특정 ID의 사용자 공개 프로필을 조회\\n\\n2. 사용자 설정 관리 함수 구현\\n   - functions/src/routes/userRoutes.ts에 Express 라우터로 구현됨\\n   - 인증 확인을 위한 미들웨어가 보호된 라우트에 적용됨\\n\\n3. 사용자 권한 및 역할 관리 시스템 구현\\n   - 토큰 기반 인증 적용됨\\n\\n4. Firestore 트리거 함수 구현\\n   - onUserCreated: 사용자 생성 시 기본 설정 문서 생성\\n   - onUserUpdated: 사용자 정보 업데이트 시 로깅 수행\\n\\n5. 사용자 알림 설정 및 관리 함수 구현 (개발 중)\\n\\n6. Firebase Storage를 활용한 사용자 사진 및 미디어 업로드 처리 (개발 중)\\n\\n7. 함수 접근 제어 및 인증 구현\\n   - 토큰 기반 인증이 적용됨\\n\\n8. 입력 유효성 검사 및 보안 강화 (개발 중)\\n</info added on 2025-05-14T08:53:44.152Z>\\n\\n사용자 진행 상황 관련 엔드포인트와 프로필 사진 업로드 기능이 구현되었습니다:\\n\\n1. 사용자 진행 상황 관련 엔드포인트 구현 완료\\n   - GET /api/users/me/progress: 사용자의 모든 경로 진행 상황을 조회하는 엔드포인트\\n   - GET /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황만 조회하는 엔드포인트\\n   - PATCH /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황을 업데이트하거나 새로 생성하는 엔드포인트\\n   - 모든 진행 상황 데이터는 Firestore의 'userProgress' 컬렉션에 저장됨\\n   - 진행 상황 데이터는 완료한 POI, 진행률, 마지막 방문 시간 등을 포함\\n\\n2. 사용자 프로필 사진 업로드 기능 구현 완료\\n   - POST /api/users/me/profile-upload-url: Firebase Storage에 프로필 사진을 업로드하기 위한 서명된 URL을 생성하는 엔드포인트\\n   - POST /api/users/me/profile-photo: 업로드된 프로필 사진의 URL을 사용자 정보에 업데이트하는 엔드포인트\\n   - 프로필 사진은 'user-profiles/{userId}' 경로에 저장됨\\n   - 이미지 크기 제한 및 유효성 검사 로직 포함\\n\\n모든 새 엔드포인트는 인증 미들웨어를 통해 보호되며, functions/src/routes/userRoutes.ts 파일에 구현되었습니다. 이로써 사용자 진행 상황 추적 및 프로필 사진 관리 기능이 완성되었습니다.\n</info added on 2025-05-14T08:55:18.396Z>\n<info added on 2025-05-16T05:49:53.627Z>\n사용자 API 엔드포인트 구현이 완료되었습니다. 모든 계획된 기능이 성공적으로 구현되고 테스트되었습니다.\n\n1. 사용자 프로필 CRUD 함수 구현\n   - GET /api/users/me: 현재 인증된 사용자의 프로필 정보와 설정을 조회\n   - PATCH /api/users/me: 현재 사용자의 프로필 정보를 업데이트\n   - PATCH /api/users/me/settings: 사용자 설정 정보만 업데이트\n   - DELETE /api/users/me: 사용자 계정을 비활성화 (isDeleted 플래그 사용)\n   - GET /api/users/:userId: 특정 ID의 사용자 공개 프로필을 조회\n\n2. 사용자 설정 관리 함수 구현\n   - functions/src/routes/userRoutes.ts에 Express 라우터로 구현됨\n   - 인증 확인을 위한 미들웨어가 보호된 라우트에 적용됨\n\n3. 사용자 권한 및 역할 관리 시스템 구현\n   - 토큰 기반 인증 적용됨\n   - Bearer 토큰 검증을 통한 사용자 인증\n   - Express Request 객체에 사용자 정보 주입\n\n4. 사용자 진행 상황 관련 엔드포인트 구현 완료\n   - GET /api/users/me/progress: 사용자의 모든 경로 진행 상황을 조회하는 엔드포인트\n   - GET /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황만 조회하는 엔드포인트\n   - PATCH /api/users/me/progress/:routeId: 특정 경로에 대한 사용자의 진행 상황을 업데이트하거나 새로 생성하는 엔드포인트\n   - 모든 진행 상황 데이터는 Firestore의 'userProgress' 컬렉션에 저장됨\n   - 진행 상황 데이터는 완료한 POI, 진행률, 마지막 방문 시간 등을 포함\n\n5. 사용자 프로필 사진 업로드 기능 구현 완료\n   - POST /api/users/me/profile-upload-url: Firebase Storage에 프로필 사진을 업로드하기 위한 서명된 URL을 생성하는 엔드포인트\n   - POST /api/users/me/profile-photo: 업로드된 프로필 사진의 URL을 사용자 정보에 업데이트하는 엔드포인트\n   - 프로필 사진은 'user-profiles/{userId}' 경로에 저장됨\n   - 이미지 크기 제한 및 유효성 검사 로직 포함\n\n6. Firestore 트리거 함수 구현\n   - onUserCreated: 사용자 생성 시 기본 설정 문서 생성\n   - onUserUpdated: 사용자 정보 업데이트 시 로깅 수행\n\n7. 함수 접근 제어 및 인증 구현\n   - 토큰 기반 인증이 적용됨\n   - 모든 보호된 엔드포인트에 인증 미들웨어 적용\n\n8. 입력 유효성 검사 및 보안 강화 완료\n   - 요청 데이터 유효성 검사 로직 구현\n   - 적절한 오류 처리 및 응답 코드 반환\n\n9. 테스트 및 검증 완료\n   - Firebase Functions 에뮬레이터를 사용하여 모든 API 엔드포인트 테스트\n   - 인증 미들웨어 검증\n   - 사용자 프로필 조회 및 업데이트 기능 테스트\n   - 진행 상황 관리 기능 테스트\n   - 프로필 이미지 업로드 기능 테스트\n\n10. 기술적 문제 해결\n    - TypeScript 타입 문제 해결: Firebase Functions v1 API를 명시적으로 사용\n    - tsconfig.json에서 타입 검사 옵션 조정으로 빌드 및 실행 성공\n</info added on 2025-05-16T05:49:53.627Z>",
+          "status": "done",
+          "dependencies": [
+            "3.7"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 5,
+          "title": "경로 및 POI API 엔드포인트 구현",
+          "description": "경로, 숙소, 관심 지점 관련 Cloud Functions API 엔드포인트를 구현합니다.",
+          "details": "1. 경로 정보 조회 함수 구현\n2. 관심 지점(POI) CRUD 함수 구현\n3. 숙소(albergues) 정보 관리 함수 구현\n4. GeoPoint 필드를 활용한 지리적 검색 및 필터링 기능 구현\n5. 거리 기반 검색 및 정렬 기능 구현\n6. 경로 단계별 정보 조회 기능 구현\n7. 사용자 위치 기반 주변 POI 검색 구현\n8. 다국어 지원을 위한 콘텐츠 관리 기능\n9. Firebase 캐싱 전략 구현으로 성능 최적화",
+          "status": "pending",
+          "dependencies": [
+            "3.7"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 9,
+          "title": "Firebase Storage 설정 및 관리",
+          "description": "Firebase Storage를 설정하고 미디어 파일 관리 시스템을 구현합니다.",
+          "details": "1. Firebase Storage 초기 설정 및 구성\n2. 파일 업로드/다운로드 함수 구현\n3. 이미지 리사이징 및 최적화 기능 구현\n4. 파일 메타데이터 관리 시스템 구현\n5. 스토리지 보안 규칙 설정\n6. 파일 만료 및 정리 정책 구현\n7. 사용자별 스토리지 할당량 관리\n8. 미디어 파일 CDN 설정 및 최적화",
+          "status": "pending",
+          "dependencies": [
+            "3.6"
+          ],
+          "parentTaskId": 3
+        },
+        {
+          "id": 10,
+          "title": "Firebase 인증 시스템 통합",
+          "description": "Firebase Authentication을 앱에 통합하고 사용자 인증 시스템을 구현합니다.",
+          "details": "1. Firebase Authentication 설정 및 구성\n2. 이메일/비밀번호 인증 구현\n3. 소셜 로그인 통합 (Google, Facebook, Apple)\n4. 사용자 세션 관리 및 토큰 처리\n5. 비밀번호 재설정 및 이메일 확인 기능 구현\n6. 사용자 계정 관리 기능 구현\n7. 인증 상태 변경 리스너 구현\n8. 보안 강화 설정 (다중 인증, 로그인 시도 제한 등)",
+          "status": "pending",
+          "dependencies": [
+            "3.6"
+          ],
+          "parentTaskId": 3
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "GPS-Based Navigation and Mapping",
+      "description": "Implement GPS tracking and mapping functionality with Google Maps SDK, including offline map support.",
+      "details": "1. Integrate Google Maps SDK with Flutter\n2. Implement user location tracking with geolocator package\n3. Create map overlay with official Camino routes\n4. Implement zoom and pan controls\n5. Add layer toggle functionality for different POI categories\n6. Implement offline map caching for pre-downloading stages\n7. Create route highlighting based on user's current position\n8. Implement elevation profile visualization\n9. Add distance calculation between points\n10. Create off-route alerts when user strays beyond set radius\n11. Implement automatic rerouting suggestions",
+      "testStrategy": "1. Test GPS accuracy in various conditions\n2. Verify map rendering performance\n3. Test offline map functionality without network\n4. Integration tests for location tracking\n5. Test route calculation algorithms\n6. Verify off-route detection accuracy",
+      "priority": "high",
+      "dependencies": [
+        1,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Infrastructure Suggestions Feature",
+      "description": "Implement the feature to display up to two suggestions per category for nearby accommodations, restaurants, pharmacies, and points of interest.",
+      "details": "1. Design and implement POI data model\n2. Create spatial queries to find nearby infrastructure\n3. Implement algorithm to select top-2 suggestions per category based on:\n   - Distance from user\n   - Ratings/reviews\n   - Relevance to pilgrims\n4. Create UI components to display suggestions\n5. Implement detailed view for each suggestion with photos and information\n6. Add filtering options for different categories\n7. Implement caching for suggestion data\n8. Create refresh mechanism for updated suggestions as user moves",
+      "testStrategy": "1. Unit tests for suggestion algorithm\n2. Integration tests with mock location data\n3. UI tests for suggestion display\n4. Performance testing for spatial queries\n5. Test edge cases (no nearby POIs, limited data areas)\n6. Verify correct limitation to maximum two suggestions per category",
+      "priority": "medium",
+      "dependencies": [
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "Route Recommendations System",
+      "description": "Develop data-driven route recommendations based on popularity and logistical convenience.",
+      "details": "1. Design algorithm for route stage recommendations\n2. Implement data collection for popular routes\n3. Create database structure for storing route segments and metadata\n4. Develop API endpoints for retrieving recommended journeys\n5. Implement UI for displaying recommended daily stages\n6. Add personalization options based on user preferences (walking pace, difficulty)\n7. Create detailed stage information display (distance, elevation, estimated time)\n8. Implement journey planning functionality\n9. Add option to customize recommended routes",
+      "testStrategy": "1. Unit tests for recommendation algorithm\n2. Integration tests with route data\n3. User testing for recommendation relevance\n4. Performance testing for route calculations\n5. Test with various user preferences\n6. Verify accuracy of distance and elevation data",
+      "priority": "medium",
+      "dependencies": [
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Community Forum Implementation",
+      "description": "Create a community forum for pilgrims to share tips, ask questions, arrange meetups, and post geo-tagged updates.",
+      "details": "1. Design database schema for forum posts, threads, and user interactions\n2. Implement backend API for forum functionality\n3. Create UI for browsing and participating in forum discussions\n4. Implement geo-tagging for location-based posts\n5. Add real-time updates using Firebase Realtime Database or Socket.io\n6. Implement post categorization and search functionality\n7. Create notification system for replies and mentions\n8. Add moderation tools and reporting functionality\n9. Implement media sharing (photos, short videos)\n10. Create meetup arrangement feature with location sharing",
+      "testStrategy": "1. Unit tests for forum backend logic\n2. Integration tests for post creation and retrieval\n3. UI tests for forum interaction\n4. Load testing for concurrent users\n5. Test real-time update performance\n6. Security testing for user-generated content",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "Information Hub and Offline Support",
+      "description": "Develop an information hub with customer service contacts, emergency information, FAQs, and offline help documents.",
+      "details": "1. Design information architecture for help content\n2. Create database structure for FAQs and help documents\n3. Implement UI for browsing information categories\n4. Add search functionality for help content\n5. Create emergency contacts section with direct dial capability\n6. Implement offline storage for help documents\n7. Add customer service contact forms\n8. Create FAQ section with expandable answers\n9. Implement content versioning for updates\n10. Add feedback mechanism for help content",
+      "testStrategy": "1. Verify offline accessibility of help documents\n2. Test search functionality with various queries\n3. UI tests for information navigation\n4. Test emergency contact functionality\n5. Verify content updates mechanism\n6. Test help content in different languages",
+      "priority": "medium",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Multi-Language Support",
+      "description": "Implement multi-language support with English as default and additional languages including Spanish, Korean, German, Japanese, and Chinese.",
+      "details": "1. Set up internationalization framework (flutter_localizations)\n2. Create translation files for all supported languages\n3. Implement language selection UI\n4. Set up automatic language detection based on device settings\n5. Create translation workflow for content updates\n6. Implement right-to-left layout support if needed\n7. Ensure all UI elements adapt to text length variations\n8. Create language-specific formatting for dates, numbers, and currencies\n9. Implement fallback mechanism for missing translations",
+      "testStrategy": "1. Test UI in all supported languages\n2. Verify text rendering and layout in different languages\n3. Test language switching functionality\n4. Verify translations accuracy with native speakers\n5. Test automatic language detection\n6. Verify all dynamic content is properly translated",
+      "priority": "medium",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Offline Map Caching",
+      "description": "Implement functionality to pre-download and cache maps for stages or the entire route for offline use.",
+      "details": "1. Design offline map caching system\n2. Implement tile downloading and storage mechanism\n3. Create UI for selecting areas to download\n4. Add progress indicators for download process\n5. Implement storage management for cached maps\n6. Create automatic detection of offline mode\n7. Implement seamless transition between online and offline maps\n8. Add cache expiration and update mechanism\n9. Optimize storage usage for limited device space\n10. Implement background downloading capability",
+      "testStrategy": "1. Test map functionality in airplane mode\n2. Verify download process for different map areas\n3. Test storage management with limited space\n4. Measure download performance on various network conditions\n5. Test cache update mechanism\n6. Verify offline navigation accuracy",
+      "priority": "high",
+      "dependencies": [
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 11,
+      "title": "Weather Forecast Integration",
+      "description": "Integrate weather forecast service to provide 3-day outlook for the next stage of the journey.",
+      "details": "1. Research and select weather API provider\n2. Implement API integration for weather data\n3. Create UI for displaying 3-day weather forecast\n4. Implement location-based weather retrieval\n5. Add caching for weather data\n6. Create weather alerts for extreme conditions\n7. Implement hourly and daily forecast views\n8. Add weather-based recommendations for planning\n9. Create offline fallback for previously cached weather data",
+      "testStrategy": "1. Test weather data accuracy for different locations\n2. Verify forecast display for various weather conditions\n3. Test caching and refresh mechanism\n4. Verify location-based weather retrieval\n5. Test weather alerts functionality\n6. Measure API usage and optimize calls",
+      "priority": "low",
+      "dependencies": [
+        4,
+        6
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 12,
+      "title": "Off-Route Alerts and Rerouting",
+      "description": "Implement visual cues and notifications when user strays beyond a set radius from the route with automatic rerouting suggestions.",
+      "details": "1. Design algorithm to detect when user is off-route\n2. Implement configurable radius threshold\n3. Create visual indicators for off-route status\n4. Add vibration and sound alerts\n5. Implement automatic rerouting calculation\n6. Create UI for displaying rerouting suggestions\n7. Add option to ignore alerts or adjust sensitivity\n8. Implement battery-efficient location monitoring\n9. Create offline support for off-route detection",
+      "testStrategy": "1. Test off-route detection accuracy\n2. Verify alert triggering at different thresholds\n3. Test rerouting suggestions quality\n4. Measure battery impact of continuous monitoring\n5. Test in areas with poor GPS signal\n6. Verify offline functionality",
+      "priority": "medium",
+      "dependencies": [
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 13,
+      "title": "Digital Pilgrim Credential",
+      "description": "Implement digital pilgrim credential to record stamps and share achievements.",
+      "details": "1. Design digital credential UI and data model\n2. Implement stamp collection functionality\n3. Create QR code scanning for official stamps\n4. Add manual stamp entry option\n5. Implement achievement system for milestones\n6. Create sharing functionality for social media\n7. Add verification system for official stamps\n8. Implement backup and restore for credential data\n9. Create visual journey timeline with stamps\n10. Add statistics and progress tracking",
+      "testStrategy": "1. Test QR code scanning with various stamp codes\n2. Verify stamp data storage and retrieval\n3. Test sharing functionality across platforms\n4. Verify achievement triggering logic\n5. Test backup and restore functionality\n6. Verify visual representation of collected stamps",
+      "priority": "low",
+      "dependencies": [
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 14,
+      "title": "Health and Activity Tracking",
+      "description": "Implement health and activity tracking features including steps, elevation gain, and calories.",
+      "details": "1. Research and integrate health tracking libraries\n2. Implement step counting functionality\n3. Create elevation gain calculation from GPS data\n4. Implement calorie estimation algorithm\n5. Design UI for displaying health statistics\n6. Add daily, weekly, and total journey statistics\n7. Implement goals and achievements for activity metrics\n8. Create data visualization for activity history\n9. Add integration with health platforms (Google Fit, Apple Health)\n10. Implement battery-efficient tracking",
+      "testStrategy": "1. Test step counting accuracy\n2. Verify elevation calculation with known routes\n3. Test calorie estimation for different user profiles\n4. Measure battery impact of tracking features\n5. Test health platform integration\n6. Verify data persistence and historical view",
+      "priority": "low",
+      "dependencies": [
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 15,
+      "title": "Emergency SOS Feature",
+      "description": "Implement emergency SOS button to send location and message to emergency contacts.",
+      "details": "1. Design SOS button UI and placement\n2. Implement emergency contact management\n3. Create location sharing functionality\n4. Implement SMS and email sending capability\n5. Add customizable emergency messages\n6. Create confirmation step to prevent accidental triggers\n7. Implement offline support for emergency messages\n8. Add local emergency services database by region\n9. Create emergency instructions display\n10. Implement follow-up status updates",
+      "testStrategy": "1. Test SOS triggering mechanism\n2. Verify location accuracy in emergency messages\n3. Test message delivery through different channels\n4. Verify offline functionality\n5. Test accidental trigger prevention\n6. Verify emergency contact management",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    }
+  ]
+}
